@@ -6,18 +6,25 @@ import numpy as np
 import argparse as arg
 import matplotlib.pyplot as plt
 
-def create_if_not_exist(path):
+
+def create_if_not_exist(path, filename=None):
     dir = os.path.dirname(path)
     if not os.path.exists(dir):
         os.makedirs(dir)
+    if filename is not None:
+        os.mknod("{}/{]".format(path, filename))
 
 
-def FileRead(self):
+def FileRead(file_path="users_name.txt"):
     NAME = []
-    with open("users_name.txt", "r") as f:
+    with open(file_path, "r") as f:
         for line in f:
             NAME.append(line.split(",")[1].rstrip())
     return NAME
+
+
+# def log(log_level, log_str):
+#     print("[{}] : {} ".format(log_level, log_str))
 
 
 def Draw_Rect(self, Image, face, color):
