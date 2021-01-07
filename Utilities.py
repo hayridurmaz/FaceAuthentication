@@ -11,8 +11,8 @@ def create_if_not_exist(path, filename=None):
     dir = os.path.dirname(path)
     if not os.path.exists(dir):
         os.makedirs(dir)
-    if filename is not None:
-        os.mknod("{}/{]".format(path, filename))
+    if filename is not None and not os.path.exists("{}{}".format(path, filename)):
+        os.mknod("{}{}".format(path, filename))
 
 
 def FileRead(file_path="users_name.txt"):
