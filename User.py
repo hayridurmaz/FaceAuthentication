@@ -1,5 +1,7 @@
 import uuid
 
+import config
+
 splitChar = ","
 
 
@@ -13,7 +15,7 @@ class User:
 
 def getUsers():
     userList = []
-    file = open("text_data/users.csv", "r")
+    file = open(config.user_file, "r")
     userStrList = file.readlines()
     file.close()
     for str in userStrList:
@@ -23,6 +25,6 @@ def getUsers():
 
 
 def addUser(User):
-    file = open("text_data/users.csv", "a")
+    file = open(config.user_file, "a")
     user_str = '{}{}{}{}{}\n'.format(User.id, splitChar, User.username, splitChar, User.name)
     file.write(user_str)
