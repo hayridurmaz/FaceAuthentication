@@ -1,7 +1,9 @@
 import logging
 
+import coloredlogs
 import cv2
 
+import config
 from Recognizer import Recognizer
 
 # TODO: can be configured from a file
@@ -9,16 +11,18 @@ from Recognizer import Recognizer
 from User import getUsers, User, addUser
 from Utilities import create_if_not_exist
 
-radius = 1
-neighbour = 8
-grid_x = 8
-grid_y = 8
+radius = config.lbp_params["radius"]
+neighbour = config.lbp_params["neighbour"]
+grid_x = config.lbp_params["grid_x"]
+grid_y = config.lbp_params["grid_y"]
+
 face_cascade_path = ''.join([cv2.data.haarcascades, 'haarcascade_frontalface_default.xml'])
 
 
 def initilization():
-    logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.DEBUG)
-    create_if_not_exist("text_data/", "users.csv")
+    coloredlogs.install()
+    # logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.DEBUG)
+    create_if_not_exist("dataset/", "users.csv")
 
 
 if __name__ == '__main__':

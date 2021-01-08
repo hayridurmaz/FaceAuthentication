@@ -6,7 +6,12 @@ import numpy as np
 import argparse as arg
 import matplotlib.pyplot as plt
 
+import config
 from Utilities import create_if_not_exist
+
+numberOfsamples = config.recognizer_options['numberOfsamples']
+dataset_name = config.recognizer_options['dataset_name']
+file_name = config.recognizer_options['file_name']
 
 
 class Recognizer:
@@ -46,6 +51,23 @@ class Recognizer:
         self.recognizer.write(file_name)
         print("\n[INFO] {0} persons trained successfully.".format(len(np.unique(ids))))
         print("\n[INFO] Quitting the program")
+    def create_dataset_for_user(self):
+        
+
+    def addNewFace(self, input, isVideo):
+        if isVideo:
+            video = cv2.VideoCapture(input)
+            # create a dataset for further model training
+            self.create_dataset_for_user(video)
+            # Training the model
+            self.train()
+        else:
+            camera = cv2.VideoCapture(eval(Arg_list["camera"]))
+            camera.set(3, 640)
+            camera.set(4, 480)
+            model.create_dataset(numberOfsamples, camera, dataset_name)
+            # Training the model
+            model.train(dataset_name, file_name)
 
     @property
     def Face_Cascade(self):
