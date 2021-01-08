@@ -1,3 +1,5 @@
+import cv2
+
 lbp_params = dict(
     radius=1,
     neighbour=8,
@@ -7,5 +9,12 @@ lbp_params = dict(
 recognizer_options = dict(
     number_of_samples=50,
     dataset_name='dataset/',
+    user_dataset='dataset/users/',
     file_name='train.yaml'
+)
+user_file = 'dataset/users.csv'
+cascade_files = dict(
+    face_cascade_path=''.join([cv2.data.haarcascades, 'haarcascade_frontalface_default.xml']),
+    right_eye_cascade_path=''.join([cv2.data.haarcascades, 'haarcascade_righteye_2splits.xml']),
+    left_eye_cascade_path=''.join([cv2.data.haarcascades, 'haarcascade_lefteye_2splits.xml'])
 )
