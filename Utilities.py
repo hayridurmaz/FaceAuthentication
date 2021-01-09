@@ -70,11 +70,11 @@ def DispID(face, NAME, Image):
     cv2.putText(Image, NAME, pt3, cv2.FONT_HERSHEY_PLAIN, 1.1, (0, 0, 255))
 
 
-def Get_UserName(ID, conf):
-    print("[INFO] Confidence: " + "{:.2f} ".format(conf))
-    if not ID > 0:
-        return " Unknown "
-    return "sa"
+# def Get_UserName(ID, conf):
+#     print("[INFO] Confidence: " + "{:.2f} ".format(conf))
+#     if not ID > 0:
+#         return " Unknown "
+#     return "sa"
 
 
 def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
@@ -130,7 +130,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                         angle_rad = np.arctan(eyeYdis / eyeXdis)
                         # convert degree to rad
                         angle_degree = angle_rad * 180 / np.pi
-                        print("[INFO] Rotation angle : {:.2f} degree".format(angle_degree))
+                        logging.info("Rotation angle : {:.2f} degree".format(angle_degree))
                         # draw rectangles
                         Draw_Rect(image, face, [0, 255, 0])
                         cv2.rectangle(image_chunk, (rx, ry), (rx + rw, ry + rh), (255, 255, 255), 2)
