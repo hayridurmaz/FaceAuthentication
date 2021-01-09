@@ -12,7 +12,7 @@ from Utilities import create_file_if_not_exist, create_folder_if_not_exist, crea
 
 numberOfsamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
-file_name = config.recognizer_options['file_name']
+recognizer_file_name = config.recognizer_options['file_name']
 
 dataset_path = config.recognizer_options['user_dataset']
 
@@ -24,15 +24,6 @@ class Recognizer:
         self._Left_Eye_Cascade = cv2.CascadeClassifier(config.cascade_files['left_eye_cascade_path'])
         self.recognizer = recognizer
         create_folder_if_not_exist("dataset/")
-
-    # def Add_User(self):
-    #     Name = input('\n[INFO] Please Enter a user name and press <return> ==> ')
-    #     Info = open("users_name.txt", "a+")
-    #     ID = len(open("users_name.txt").readlines()) + 1
-    #     Info.write(str(ID) + "," + Name + "\n")
-    #     print("\n[INFO] This Person has ID = " + str(ID))
-    #     Info.close()
-    #     return ID
 
     def getImagesAndLabels(self):
         imagePaths = [os.path.join(dataset_path, f) for f in os.listdir(dataset_path)]
@@ -53,7 +44,7 @@ class Recognizer:
         faces, ids = self.getImagesAndLabels()
         self.recognizer.update(faces, np.array(ids))
         # Saving the model
-        self.recognizer.write(file_name)
+        self.recognizer.write(recognizer_file_name)
         logging.info("trained with {0} images successfully.".format(len(np.unique(ids))))
 
     def addNewFace(self, input, isVideo, user):

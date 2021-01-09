@@ -33,7 +33,7 @@ if __name__ == '__main__':
     model = Recognizer(recognizer)
 
     # hayri = User(None, "hayri", "hdurmaz")
-    addUser(User(None, "akadir", "akadirdurmaz"))
+    # addUser(User(None, "akadir", "akadirdurmaz"))
     users = getUsers()
     logging.info(str(users))
 
