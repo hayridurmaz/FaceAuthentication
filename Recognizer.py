@@ -10,7 +10,7 @@ import logging
 import config
 from Utilities import create_if_not_exist, create_dataset_for_user
 
-numberOfsamples = config.recognizer_options['numberOfsamples']
+numberOfsamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
 file_name = config.recognizer_options['file_name']
 
@@ -59,17 +59,14 @@ class Recognizer:
     def addNewFace(self, input, isVideo, user):
         if isVideo:
             video = cv2.VideoCapture(input)
-            # create a dataset for further model training
-            create_dataset_for_user(video, user, numberOfsamples)
-            # Training the model
-            self.train()
         else:
-            camera = cv2.VideoCapture(eval(Arg_list["camera"]))
-            camera.set(3, 640)
-            camera.set(4, 480)
-            model.create_dataset(numberOfsamples, camera, dataset_name)
-            # Training the model
-            model.train(dataset_name, file_name)
+            video = cv2.VideoCapture(config.recognizer_options['videoId'])
+            video.set(3, 640)
+            video.set(4, 480)
+        # create a dataset for further model training
+        create_dataset_for_user(video, user, numberOfsamples,self)
+        # Training the model
+        self.train()
 
     @property
     def Face_Cascade(self):

@@ -10,7 +10,8 @@ recognizer_options = dict(
     number_of_samples=50,
     dataset_name='dataset/',
     user_dataset='dataset/users/',
-    file_name='train.yaml'
+    file_name='train.yaml',
+    videoId=0
 )
 user_file = 'dataset/users.csv'
 cascade_files = dict(
