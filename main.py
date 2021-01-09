@@ -6,8 +6,6 @@ import cv2
 import config
 from Recognizer import Recognizer
 
-# TODO: can be configured from a file
-# variables for LBPH algorithm,
 from User import getAllUsers, User, addUser
 from Utilities import create_file_if_not_exist, create_folder_if_not_exist
 
@@ -15,8 +13,6 @@ radius = config.lbp_params["radius"]
 neighbour = config.lbp_params["neighbour"]
 grid_x = config.lbp_params["grid_x"]
 grid_y = config.lbp_params["grid_y"]
-
-face_cascade_path = ''.join([cv2.data.haarcascades, 'haarcascade_frontalface_default.xml'])
 
 
 def initilization():
@@ -28,17 +24,18 @@ def initilization():
 
 if __name__ == '__main__':
     initilization()
-
     recognizer = cv2.face.LBPHFaceRecognizer_create(radius, neighbour, grid_x, grid_y)
     model = Recognizer(recognizer)
 
     # hayri = User(None, "hayri", "hdurmaz")
-    # addUser(User(None, "akadir", "akadirdurmaz"))
+    # addUser(User(None, "hayri", "hayri"))
+    # addUser(User(None, "akadir", "akadir"))
     users = getAllUsers()
-    logging.info(str(users))
 
-    model.addNewFace(None, False, users[0])
+    # model.addNewFace(None, False, users[0])
+    # model.addNewFace(None, False, user=users[1])
 
+    model.queryFace(None, users[0])
     # image_path = "images/hayri.png"
 
     # logging.info(image_path)

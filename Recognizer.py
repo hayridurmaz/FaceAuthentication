@@ -94,70 +94,51 @@ class Recognizer:
         for _, face in enumerate(faces):
             Draw_Rect(img, face * 3, [0, 255, 0])
             x, y, w, h = face * 3
-            id1, conf = self.recognizer.predict(gray1[y:y + h, x:x + w])
+            recognized_id, conf = self.recognizer.predict(gray1[y:y + h, x:x + w])
             # Check that the face is recognized
-            if (conf > 100):
+            if (conf > 75):
                 self.DispID(face * 3, "CANNOT RECOGNIZE", img)
             else:
-                if getUserById(id1) is not None:
-                    self.DispID(face * 3, getUserById(id1).name, img)
+                if getUserById(recognized_id) is not None:
+                    self.DispID(face * 3, getUserById(recognized_id).name, img)
+                    name = getUserById(recognized_id).name
+                    logging.info("{0} found with conf {1}".format(name, conf))
 
         return img
 
-    def queryFace(self, input, isVideo, user):
-        # skin_detect = Skin_Detect()
+    def readInputAndPredict(self, input_):
         # What are they?
         size1 = (30, 30)
         size2 = (80, 110)
-        scale_factor = 3
-        # Face_Detect = Face_Detector(skin_detect)
+
+        frame_width = int(input_.get(3))
+        frame_height = int(input_.get(4))
+        size = (frame_width, frame_height)
+        # result = cv2.VideoWriter('filename.avi',
+        #                          cv2.VideoWriter_fourcc(*'MJPG'),
+        #                          10, size)
+        while True:
+            ret, img = input_.read()
+            predicted = self.predict(img, size1, size2)
+            # result.write(predicted)
+            cv2.imshow('video', predicted)
+            k = cv2.waitKey(10) & 0xff  # 'ESC' for Exit
+            if k == 27 or predicted is None:
+                break
+        cv2.destroyAllWindows()
+        input_.release()
+
+    def queryFace(self, input, user):
         if not (os.path.isfile(recognizer_file_name)):
             raise RuntimeError("file: %s not found" % recognizer_file_name)
         self.recognizer.read(recognizer_file_name)
 
-        if isVideo:
+        if input is not None:
             video = cv2.VideoCapture(input)
-            # We need to set resolutions.
-            # so, convert them from float to integer.
-            frame_width = int(video.get(3))
-            frame_height = int(video.get(4))
-            size = (frame_width, frame_height)
-            result = cv2.VideoWriter('filename.avi',
-                                     cv2.VideoWriter_fourcc(*'MJPG'),
-                                     10, size)
-            while True:
-                ret, img = video.read()
-                predicted = self.predict(img, size1, size2)
-                result.write(predicted)
-                cv2.imshow('video', predicted)
-                k = cv2.waitKey(10) & 0xff  # 'ESC' for Exit
-                if k == 27 or predicted is None:
-                    break
-            cv2.destroyAllWindows()
-            # When everything done, release
-            # the video capture and video
-            # write objects
-            video.release()
-            result.release()
+            self.readInputAndPredict(video)
         else:
             camera = cv2.VideoCapture(config.recognizer_options['camera_id'])
-            camera.set(3, 640)
-            camera.set(4, 480)
-            frame_width = int(camera.get(3))
-            frame_height = int(camera.get(4))
-            size = (frame_width, frame_height)
-            # result = cv2.VideoWriter('filename.avi',
-            #                          cv2.VideoWriter_fourcc(*'MJPG'),
-            #                          10, size)
-            while True:
-                ret, img = camera.read()
-                predicted = self.predict(img, size1, size2)
-                # result.write(predicted)
-                cv2.imshow('video', predicted)
-                k = cv2.waitKey(10) & 0xff  # 'ESC' for Exit
-                if k == 27 or predicted is None:
-                    break
-            camera.release()
+            self.readInputAndPredict(camera)
 
     @property
     def Face_Cascade(self):
