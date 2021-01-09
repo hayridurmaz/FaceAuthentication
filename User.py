@@ -11,6 +11,8 @@ class User:
         self.name = name
         if id is None:
             self.id = uuid.uuid1()
+        else:
+            self.id = id
 
 
 def getUsers():
