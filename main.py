@@ -1,12 +1,9 @@
-import logging
-
 import coloredlogs
 import cv2
 
 import config
 from Recognizer import Recognizer
-
-from User import getAllUsers, User, addUser
+from User import getAllUsers
 from Utilities import create_file_if_not_exist, create_folder_if_not_exist
 
 radius = config.lbp_params["radius"]

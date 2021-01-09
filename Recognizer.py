@@ -1,15 +1,14 @@
-import sys
 import cv2
+import logging
 import os
 import time
+
+import cv2
 import numpy as np
-import argparse as arg
-import matplotlib.pyplot as plt
-import logging
 
 import config
 from User import getUserById
-from Utilities import create_file_if_not_exist, create_folder_if_not_exist, create_dataset_for_user, Draw_Rect
+from Utilities import create_folder_if_not_exist, create_dataset_for_user, Draw_Rect
 
 numberOfsamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
