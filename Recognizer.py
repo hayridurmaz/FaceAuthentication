@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import logging
 
 import config
-from Utilities import create_file_if_not_exist, create_folder_if_not_exist, create_dataset_for_user
+from Utilities import create_file_if_not_exist, create_folder_if_not_exist, create_dataset_for_user, Draw_Rect
 
 numberOfsamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
@@ -58,6 +58,103 @@ class Recognizer:
         create_dataset_for_user(video, user, numberOfsamples, self)
         # Training the model
         self.train()
+
+    def DispID(self, face, NAME, Image):
+        x, y, w, h = face
+        pt1 = (int(x + w / 2.0 - 50), int(y + h + 40))
+        pt2 = (int(x + w / 2.0 + 50), int(y + h + 65))
+        pt3 = (int(x + w / 2.0 - 46), int(y + h + (-int(y + h) + int(y + h + 25)) / 2 + 48))
+        triangle_cnt = np.array([(int(x + w / 2.0), int(y + h + 10)),
+                                 (int(x + w / 2.0 - 20), int(y + h + 35)),
+                                 (int(x + w / 2.0 + 20), int(y + h + 35))])
+        cv2.drawContours(Image, [triangle_cnt], 0, (255, 255, 255), -1)
+        cv2.rectangle(Image, pt1, pt2, (255, 255, 255), -1)
+        cv2.rectangle(Image, pt1, pt2, (0, 0, 255), 1)
+        cv2.putText(Image, NAME, pt3, cv2.FONT_HERSHEY_PLAIN, 1.1, (0, 0, 255))
+
+    def Get_UserName(self, ID, conf):
+        print("[INFO] Confidence: " + "{:.2f} ".format(conf))
+        if not ID > 0:
+            return " Unknown "
+        return "sa"
+
+    def predict(self, img, size1, size2):
+        if img is None:
+            logging.info("Reaching the end of the video, exiting..")
+            return
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray1 = gray.copy()
+        # gray = cv2.equalizeHist(gray)
+        gray = cv2.resize(gray, (0, 0), fx=1 / 3, fy=1 / 3)
+        faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=4, minSize=(30, 30))
+        if len(faces) == 0:
+            img1 = cv2.resize(img, (0, 0), fx=1 / 3, fy=1 / 3)
+            # faces = skin_face_detector.Detect_Face_Img(img1, size1, size2)
+        for _, face in enumerate(faces):
+            Draw_Rect(img, face * 3, [0, 255, 0])
+            x, y, w, h = face * 3
+            id1, conf = self.recognizer.predict(gray1[y:y + h, x:x + w])
+            # Check that the face is recognized
+            if (conf > 100):
+                self.DispID(face * 3, self.Get_UserName(0, conf), img)
+            else:
+                self.DispID(face * 3, self.Get_UserName(id1, conf), img)
+        return img
+
+    def queryFace(self, input, isVideo, user):
+        # skin_detect = Skin_Detect()
+        # What are they?
+        size1 = (30, 30)
+        size2 = (80, 110)
+        scale_factor = 3
+        # Face_Detect = Face_Detector(skin_detect)
+        if not (os.path.isfile(recognizer_file_name)):
+            raise RuntimeError("file: %s not found" % recognizer_file_name)
+        self.recognizer.read(recognizer_file_name)
+
+        if isVideo:
+            video = cv2.VideoCapture(input)
+            # We need to set resolutions.
+            # so, convert them from float to integer.
+            frame_width = int(video.get(3))
+            frame_height = int(video.get(4))
+            size = (frame_width, frame_height)
+            result = cv2.VideoWriter('filename.avi',
+                                     cv2.VideoWriter_fourcc(*'MJPG'),
+                                     10, size)
+            while True:
+                ret, img = video.read()
+                predicted = self.predict(img, size1, size2)
+                result.write(predicted)
+                cv2.imshow('video', predicted)
+                k = cv2.waitKey(10) & 0xff  # 'ESC' for Exit
+                if k == 27 or predicted is None:
+                    break
+            cv2.destroyAllWindows()
+            # When everything done, release
+            # the video capture and video
+            # write objects
+            video.release()
+            result.release()
+        else:
+            camera = cv2.VideoCapture(config.recognizer_options['camera_id'])
+            camera.set(3, 640)
+            camera.set(4, 480)
+            frame_width = int(camera.get(3))
+            frame_height = int(camera.get(4))
+            size = (frame_width, frame_height)
+            # result = cv2.VideoWriter('filename.avi',
+            #                          cv2.VideoWriter_fourcc(*'MJPG'),
+            #                          10, size)
+            while True:
+                ret, img = camera.read()
+                predicted = self.predict(img, size1, size2)
+                # result.write(predicted)
+                cv2.imshow('video', predicted)
+                k = cv2.waitKey(10) & 0xff  # 'ESC' for Exit
+                if k == 27 or predicted is None:
+                    break
+            camera.release()
 
     @property
     def Face_Cascade(self):
