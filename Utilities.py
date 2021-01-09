@@ -31,18 +31,6 @@ def FileRead(file_path="users_name.txt"):
 #     print("[{}] : {} ".format(log_level, log_str))
 
 
-def Draw_Rect(self, Image, face, color):
-    x, y, w, h = face
-    cv2.line(Image, (x, y), (int(x + (w / 5)), y), color, 2)
-    cv2.line(Image, (int(x + ((w / 5) * 4)), y), (x + w, y), color, 2)
-    cv2.line(Image, (x, y), (x, int(y + (h / 5))), color, 2)
-    cv2.line(Image, (x + w, y), (x + w, int(y + (h / 5))), color, 2)
-    cv2.line(Image, (x, int(y + (h / 5 * 4))), (x, y + h), color, 2)
-    cv2.line(Image, (x, int(y + h)), (x + int(w / 5), y + h), color, 2)
-    cv2.line(Image, (x + int((w / 5) * 4), y + h), (x + w, y + h), color, 2)
-    cv2.line(Image, (x + w, int(y + (h / 5 * 4))), (x + w, y + h), color, 2)
-
-
 def Draw_Rect(Image, face, color):
     x, y, w, h = face
     cv2.line(Image, (x, y), (int(x + (w / 5)), y), color, 2)
@@ -144,3 +132,6 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
     cam.release()
     cv2.destroyAllWindows()
     plt.show()
+
+
+
