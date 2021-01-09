@@ -2,6 +2,7 @@ import coloredlogs
 import cv2
 
 import config
+import logging
 from Recognizer import Recognizer
 from User import getAllUsers
 from Utilities import create_file_if_not_exist, create_folder_if_not_exist
@@ -32,7 +33,12 @@ if __name__ == '__main__':
     # model.addNewFace(None, False, users[0])
     # model.addNewFace(None, False, user=users[1])
 
-    model.queryFace(None, users[0])
+    result = model.queryFace(None, users[0])
+
+    if result:
+        logging.info("YES...")
+    else:
+        logging.error("NO...")
     # image_path = "images/hayri.png"
 
     # logging.info(image_path)

@@ -48,6 +48,7 @@ class Recognizer:
         self.train()
 
     def predict(self, img):
+        authorized = False
         if img is None:
             logging.info("Reaching the end of the video, exiting..")
             return
@@ -61,14 +62,15 @@ class Recognizer:
             x, y, w, h = face * 3
             recognized_id, conf = self.recognizer.predict(gray1[y:y + h, x:x + w])
             # Check that the face is recognized
-            if conf > 75:
+            if conf > int(config.recognizer_options['confident_threshold']):
                 DispID(face * 3, "CANNOT RECOGNIZE", img)
             else:
                 if getUserById(recognized_id) is not None:
                     DispID(face * 3, getUserById(recognized_id).name, img)
                     name = getUserById(recognized_id).name
                     logging.info("{0} found with conf {1}".format(name, conf))
-        return img
+                    authorized = True
+        return img, authorized
 
     def readInputAndPredict(self, input_):
         # frame_width = int(input_.get(3))
@@ -77,9 +79,22 @@ class Recognizer:
         # result = cv2.VideoWriter('filename.avi',
         #                          cv2.VideoWriter_fourcc(*'MJPG'),
         #                          10, size)
+        count = 0
+        start = time.time()
         while True:
+            curr = time.time()
+            if curr - start > int(config.recognizer_options['timeout']):
+                logging.error("Couldnt recognize")
+                return False
             ret, img = input_.read()
-            predicted = self.predict(img)
+            predicted, authorized = self.predict(img)
+            if authorized:
+                count = count + 1
+            else:
+                count = 0
+
+            if count > int(config.recognizer_options['number_of_recognizing_threshold']):
+                return True
             # result.write(predicted)
             cv2.imshow('video', predicted)
             k = cv2.waitKey(10) & 0xff  # 'ESC' for Exit
@@ -95,10 +110,10 @@ class Recognizer:
 
         if input is not None:
             video = cv2.VideoCapture(input)
-            self.readInputAndPredict(video)
+            return self.readInputAndPredict(video)
         else:
             camera = cv2.VideoCapture(config.recognizer_options['camera_id'])
-            self.readInputAndPredict(camera)
+            return self.readInputAndPredict(camera)
 
     @property
     def Face_Cascade(self):
