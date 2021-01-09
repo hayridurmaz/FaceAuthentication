@@ -8,7 +8,7 @@ from Recognizer import Recognizer
 
 # TODO: can be configured from a file
 # variables for LBPH algorithm,
-from User import getUsers, User, addUser
+from User import getAllUsers, User, addUser
 from Utilities import create_file_if_not_exist, create_folder_if_not_exist
 
 radius = config.lbp_params["radius"]
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     # hayri = User(None, "hayri", "hdurmaz")
     # addUser(User(None, "akadir", "akadirdurmaz"))
-    users = getUsers()
+    users = getAllUsers()
     logging.info(str(users))
 
     model.addNewFace(None, False, users[0])

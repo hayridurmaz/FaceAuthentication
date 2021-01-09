@@ -15,7 +15,7 @@ class User:
             self.id = id
 
 
-def getUsers():
+def getAllUsers():
     userList = []
     file = open(config.user_file, "r")
     userStrList = file.readlines()
@@ -24,6 +24,14 @@ def getUsers():
         splited = str.split(splitChar)
         userList.append(User(splited[0], splited[1], splited[2]))
     return userList
+
+
+def getUserByUsername(username):
+    userList = getAllUsers()
+    for user in userList:
+        if user.username == username:
+            return user
+    return None
 
 
 def addUser(User):
