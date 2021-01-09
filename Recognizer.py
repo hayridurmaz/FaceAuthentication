@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import logging
 
 import config
-from Utilities import create_if_not_exist, create_dataset_for_user
+from Utilities import create_file_if_not_exist, create_folder_if_not_exist, create_dataset_for_user
 
 numberOfsamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
@@ -23,7 +23,7 @@ class Recognizer:
         self._Right_Eye_Cascade = cv2.CascadeClassifier(config.cascade_files['right_eye_cascade_path'])
         self._Left_Eye_Cascade = cv2.CascadeClassifier(config.cascade_files['left_eye_cascade_path'])
         self.recognizer = recognizer
-        create_if_not_exist("dataset/")
+        create_folder_if_not_exist("dataset/")
 
     # def Add_User(self):
     #     Name = input('\n[INFO] Please Enter a user name and press <return> ==> ')
@@ -54,17 +54,17 @@ class Recognizer:
         self.recognizer.update(faces, np.array(ids))
         # Saving the model
         self.recognizer.write(file_name)
-        logging.info("{0} persons trained successfully.".format(len(np.unique(ids))))
+        logging.info("trained with {0} images successfully.".format(len(np.unique(ids))))
 
     def addNewFace(self, input, isVideo, user):
         if isVideo:
             video = cv2.VideoCapture(input)
         else:
-            video = cv2.VideoCapture(config.recognizer_options['videoId'])
+            video = cv2.VideoCapture(config.recognizer_options['camera_id'])
             video.set(3, 640)
             video.set(4, 480)
         # create a dataset for further model training
-        create_dataset_for_user(video, user, numberOfsamples,self)
+        create_dataset_for_user(video, user, numberOfsamples, self)
         # Training the model
         self.train()
 

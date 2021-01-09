@@ -8,12 +8,15 @@ import numpy as np
 import config
 
 
-def create_if_not_exist(path, filename=None):
+def create_file_if_not_exist(file_name):
+    if not os.path.exists(file_name):
+        os.mknod(file_name)
+
+
+def create_folder_if_not_exist(path):
     dir = os.path.dirname(path)
     if not os.path.exists(dir):
         os.makedirs(dir)
-    if filename is not None and not os.path.exists("{}{}".format(path, filename)):
-        os.mknod("{}{}".format(path, filename))
 
 
 def FileRead(file_path="users_name.txt"):
@@ -60,7 +63,10 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
     while (True):
         # Capture, decode and return the next frame of the video
         ret, image = cam.read()
+        cv2.imshow('Video', image)
         # Convert to gray-scale image
+        if image is None:
+            break
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # Search for faces in the gray-scale image
         # faces is an array of coordinates of the rectangles where faces exists
@@ -104,7 +110,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                         angle_degree = angle_rad * 180 / np.pi
                         print("[INFO] Rotation angle : {:.2f} degree".format(angle_degree))
                         # draw rectangles
-                        recognizer.Draw_Rect(image, face, [0, 255, 0])
+                        Draw_Rect(image, face, [0, 255, 0])
                         cv2.rectangle(image_chunk, (rx, ry), (rx + rw, ry + rh), (255, 255, 255), 2)
                         cv2.rectangle(image_chunk, (lx + int(w / 2), ly), (lx + int(w / 2) + lw, ly + lh),
                                       (0, 255, 255), 2)

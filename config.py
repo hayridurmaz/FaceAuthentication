@@ -11,7 +11,7 @@ recognizer_options = dict(
     dataset_name='dataset/',
     user_dataset='dataset/users/',
     file_name='train.yaml',
-    videoId=0
+    camera_id=0
 )
 user_file = 'dataset/users.csv'
 cascade_files = dict(
