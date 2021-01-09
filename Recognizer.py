@@ -10,10 +10,9 @@ import config
 from User import getUserById
 from Utilities import create_folder_if_not_exist, create_dataset_for_user, Draw_Rect, DispID, getImagesAndLabels
 
-numberOfsamples = config.recognizer_options['number_of_samples']
+numberOfSamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
 recognizer_file_name = config.recognizer_options['file_name']
-
 dataset_path = config.recognizer_options['user_dataset']
 
 
@@ -43,11 +42,11 @@ class Recognizer:
             video.set(3, 640)
             video.set(4, 480)
         # create a dataset for further model training
-        create_dataset_for_user(video, user, numberOfsamples, self)
+        create_dataset_for_user(video, user, numberOfSamples, self)
         # Training the model
         self.train()
 
-    def predict(self, img):
+    def predict(self, img, user_id):
         authorized = False
         if img is None:
             logging.info("Reaching the end of the video, exiting..")
@@ -63,16 +62,21 @@ class Recognizer:
             recognized_id, conf = self.recognizer.predict(gray1[y:y + h, x:x + w])
             # Check that the face is recognized
             if conf > int(config.recognizer_options['confident_threshold']):
-                DispID(face * 3, "CANNOT RECOGNIZE", img)
+                DispID(face * 3, "CANNOT RECOGNIZE ({}) ({})".format(conf, recognized_id), img)
             else:
-                if getUserById(recognized_id) is not None:
+                if getUserById(recognized_id) is not None and recognized_id != user_id:
                     DispID(face * 3, getUserById(recognized_id).name, img)
                     name = getUserById(recognized_id).name
                     logging.info("{0} found with conf {1}".format(name, conf))
                     authorized = True
+                else:
+                    DispID(face * 3, getUserById(recognized_id).name, img)
+                    name = getUserById(recognized_id).name
+                    logging.info("{0} found with conf {1}".format(name, conf))
+                    authorized = False
         return img, authorized
 
-    def readInputAndPredict(self, input_):
+    def readInputAndPredict(self, input_, user_id):
         # frame_width = int(input_.get(3))
         # frame_height = int(input_.get(4))
         # size = (frame_width, frame_height)
@@ -87,7 +91,7 @@ class Recognizer:
                 logging.error("Couldnt recognize")
                 return False
             ret, img = input_.read()
-            predicted, authorized = self.predict(img)
+            predicted, authorized = self.predict(img, user_id)
             if authorized:
                 count = count + 1
             else:
@@ -110,10 +114,10 @@ class Recognizer:
 
         if input is not None:
             video = cv2.VideoCapture(input)
-            return self.readInputAndPredict(video)
+            return self.readInputAndPredict(video, user.id)
         else:
             camera = cv2.VideoCapture(config.recognizer_options['camera_id'])
-            return self.readInputAndPredict(camera)
+            return self.readInputAndPredict(camera, user.id)
 
     @property
     def Face_Cascade(self):
