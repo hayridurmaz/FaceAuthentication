@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import logging
 
 import config
+from User import getUserById
 from Utilities import create_file_if_not_exist, create_folder_if_not_exist, create_dataset_for_user, Draw_Rect
 
 numberOfsamples = config.recognizer_options['number_of_samples']
@@ -32,7 +33,7 @@ class Recognizer:
         for imagePath in imagePaths:
             img = cv2.imread(imagePath, 0)
             img_numpy = np.array(img, 'uint8')
-            id = int(os.path.split(imagePath)[- 1].split(".")[1])
+            id = int(os.path.split(imagePath)[- 1].split(".")[0])
             faceSamples.append(img_numpy)
             ids.append(id)
         return faceSamples, ids
@@ -96,9 +97,11 @@ class Recognizer:
             id1, conf = self.recognizer.predict(gray1[y:y + h, x:x + w])
             # Check that the face is recognized
             if (conf > 100):
-                self.DispID(face * 3, self.Get_UserName(0, conf), img)
+                self.DispID(face * 3, "CANNOT RECOGNIZE", img)
             else:
-                self.DispID(face * 3, self.Get_UserName(id1, conf), img)
+                if getUserById(id1) is not None:
+                    self.DispID(face * 3, getUserById(id1).name, img)
+
         return img
 
     def queryFace(self, input, isVideo, user):
