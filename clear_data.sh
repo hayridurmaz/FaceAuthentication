@@ -1,3 +1,3 @@
 rm -rf dataset/users/*
-echo "" > dataset/users.csv
 rm -rf train.yaml
+truncate -s 0 dataset/users.csv
