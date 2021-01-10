@@ -51,16 +51,15 @@ def authenticate(model):
 
 def testCase(model):
     # Comment unneeded lines!
-    # addUsers()
-    # train(model)
+    addUsers()
+    train(model)
     authenticate(model)
 
 
 def testCase_2(model):
     addUser(User(None, "hayri", "hayri"))
-    userlist = getAllUsers()
-    model.addNewFace(None, None, userlist[1])
-    res = model.queryFace(None, userlist[1])
+    model.addNewFace(None, None, getUserByUsername("hayri"))
+    res = model.queryFace(None, getUserByUsername("hayri"))
     print(res)
 
 
@@ -89,8 +88,6 @@ if __name__ == '__main__':
     initilization()
     recognizer = cv2.face.LBPHFaceRecognizer_create(radius, neighbour, grid_x, grid_y)
     model = Recognizer(recognizer)
-    userlist = getAllUsers()
 
-    # model.addNewFace(None, "test_data/train/abdullahgul/", userlist[0])
-    # testCase_2(model)
+    testCase_2(model)
     # testCase(model)

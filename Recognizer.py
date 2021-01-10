@@ -72,7 +72,7 @@ class Recognizer:
         gray1 = gray.copy()
         # gray = cv2.equalizeHist(gray)
         gray = cv2.resize(gray, (0, 0), fx=1 / 3, fy=1 / 3)
-        faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(5, 5))
+        faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(10, 10))
         for _, face in enumerate(faces):
             Draw_Rect(img, face * 3, [0, 255, 0])
             x, y, w, h = face * 3
