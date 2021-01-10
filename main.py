@@ -34,14 +34,14 @@ def addUsers():
 def train(model_recognizer):
     user_list = getAllUsers()
     for u in user_list:
-        model_recognizer.addNewFace("test_data/train/{}.mp4".format(u.username), None, u)
+        model_recognizer.addNewFace("test_data/train/{}.avi".format(u.username), None, u)
 
 
 def authenticate(model):
     global FN, TP
     user_list = getAllUsers()
     for u in user_list:
-        res = model.queryFace("test_data/query/{}.mp4".format(u.username), u)
+        res = model.queryFace("test_data/query/{}.avi".format(u.username), u)
         if res:
             TP = TP + 1
         else:
@@ -51,15 +51,24 @@ def authenticate(model):
 
 def testCase(model):
     # Comment unneeded lines!
-    addUsers()
-    train(model)
+    # addUsers()
+    # train(model)
     authenticate(model)
 
 
 def testCase_2(model):
-    addUser(User(None, "hayri", "hayri"))
-    model.addNewFace(None, None, getUserByUsername("hayri"))
+    # addUser(User(None, "hayri", "hayri"))
+    # model.addNewFace(None, None, getUserByUsername("hayri"))
     res = model.queryFace(None, getUserByUsername("hayri"))
+    print(res)
+
+
+def testCase_4(model):
+    u_name = "bush"
+    addUser(User(None, u_name, u_name))
+    u = getUserByUsername(u_name)
+    model.addNewFace("test_data/train/{}.mp4".format(u.username), None, u)
+    res = model.queryFace("test_data/query/{}.mp4".format(u.username), u)
     print(res)
 
 

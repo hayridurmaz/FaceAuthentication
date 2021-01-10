@@ -73,26 +73,28 @@ class Recognizer:
         # gray = cv2.equalizeHist(gray)
         gray = cv2.resize(gray, (0, 0), fx=1 / 3, fy=1 / 3)
         faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(10, 10))
+        f = None
         for _, face in enumerate(faces):
-            Draw_Rect(img, face * 3, [0, 255, 0])
+            Draw_Rect(img, face * 3, [0, 0, 255])
             x, y, w, h = face * 3
             recognized_id, conf = self.recognizer.predict(gray1[y:y + h, x:x + w])
             # Check that the face is recognized
             if conf > int(config.recognizer_options['confident_threshold']):
-                DispID(face * 3, "CANNOT RECOGNIZE ({}) ({})".format(conf, recognized_id), img)
+                DispID(face * 3, "NOT AUTHENTICATED", img)
                 logging.info("Cannot found; conf= {0}".format(conf))
             else:
                 if getUserById(recognized_id) is not None and str(recognized_id) == user_id:
                     DispID(face * 3, getUserById(recognized_id).name, img)
                     name = getUserById(recognized_id).name
                     logging.info("{0} found with conf {1}".format(name, conf))
+                    f = face
                     authorized = True
                 else:
                     DispID(face * 3, getUserById(recognized_id).name, img)
                     name = getUserById(recognized_id).name
                     logging.info("{0} found with conf {1}".format(name, conf))
                     authorized = False
-        return img, authorized
+        return img, authorized, f
 
     def readInputAndPredict(self, input_, user_id):
         # frame_width = int(input_.get(3))
@@ -109,13 +111,15 @@ class Recognizer:
                 logging.error("Couldnt recognize")
                 return False
             ret, img = input_.read()
-            predicted, authorized = self.predict(img, user_id)
+            predicted, authorized, face = self.predict(img, user_id)
             if authorized:
                 count = count + 1
             else:
                 count = 0
 
             if count > int(config.recognizer_options['number_of_recognizing_threshold']):
+                DispID(face * 3, 'AUTHENTICATED', img)
+                time.sleep(2)
                 return True
             # result.write(predicted)
             if predicted is not None:
