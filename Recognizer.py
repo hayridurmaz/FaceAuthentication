@@ -49,7 +49,7 @@ class Recognizer:
         authorized = False
         if img is None:
             logging.info("Reaching the end of the video, exiting..")
-            return
+            return None, False
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray1 = gray.copy()
         # gray = cv2.equalizeHist(gray)
@@ -99,7 +99,8 @@ class Recognizer:
             if count > int(config.recognizer_options['number_of_recognizing_threshold']):
                 return True
             # result.write(predicted)
-            cv2.imshow('video', predicted)
+            if predicted is not None:
+                cv2.imshow('video', predicted)
             k = cv2.waitKey(10) & 0xff  # 'ESC' for Exit
             if k == 27 or predicted is None:
                 break
