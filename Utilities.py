@@ -167,6 +167,8 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                     # Find the center of the image
                     # print("\n[INFO] Adding image number {} to the dataset".format(count))
                     # Save the correct inverted image
+                    if abs(gray_chunk.shape[0] - gray_chunk.shape[1]) > 20:
+                        continue
                     cv2.imwrite(
                         config.recognizer_options['user_dataset'] + str(user.id) + '.' + str(count) + ".jpg ",
                         gray_chunk)
