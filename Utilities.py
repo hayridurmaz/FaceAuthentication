@@ -7,6 +7,8 @@ import numpy as np
 
 import config
 
+dataset_path = config.recognizer_options['user_dataset']
+
 
 def create_file_if_not_exist(file_name):
     if not os.path.exists(file_name):
