@@ -126,4 +126,4 @@ dmypy.json
 
 # Dataset
 dataset/
-./train.yaml
+train.yaml
