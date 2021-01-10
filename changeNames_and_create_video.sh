@@ -1,3 +1,4 @@
+cd $1
 images=$(for i in `ls *.jpg`; do LEN=`expr length $i`; echo  $i; done | sort -n)
 j=1
 for i in $images; do
@@ -7,4 +8,7 @@ for i in $images; do
    #we can add a condition on j to rename just the first 999 images.
 done
 
-ffmpeg -framerate 25 -i %04d.jpg   -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p $1.mp4
+if [[ ! -z $2 ]]
+then
+  ffmpeg -framerate 25 -i %04d.jpg   -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p $2.mp4
+fi
