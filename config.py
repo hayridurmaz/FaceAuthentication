@@ -13,8 +13,8 @@ recognizer_options = dict(
     file_name='train.yaml',
     camera_id=0,
     timeout=10,
-    number_of_recognizing_threshold=10,
-    confident_threshold=50
+    number_of_recognizing_threshold=5,
+    confident_threshold=100
 )
 user_file = 'dataset/users.csv'
 cascade_files = dict(

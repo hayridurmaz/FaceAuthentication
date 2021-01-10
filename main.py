@@ -5,7 +5,7 @@ import config
 import os
 import logging
 from Recognizer import Recognizer
-from User import getAllUsers, addUser, User
+from User import getAllUsers, addUser, User, getUserByUsername
 from Utilities import create_file_if_not_exist, create_folder_if_not_exist
 
 radius = config.lbp_params["radius"]
@@ -34,18 +34,19 @@ def addUsers():
 def train(model_recognizer):
     user_list = getAllUsers()
     for u in user_list:
-        model_recognizer.addNewFace("test_data/train/{}.avi".format(u.username), True, u)
+        model_recognizer.addNewFace("test_data/train/{}.mp4".format(u.username), None, u)
 
 
 def authenticate(model):
     global FN, TP
     user_list = getAllUsers()
     for u in user_list:
-        res = model.queryFace("test_data/query/{}.avi".format(u.username), u)
+        res = model.queryFace("test_data/query/{}.mp4".format(u.username), u)
         if res:
             TP = TP + 1
         else:
             FN = FN + 1
+    print("TP= {0},\nFN={1}".format(TP, FN))
 
 
 def testCase(model):
@@ -55,9 +56,41 @@ def testCase(model):
     authenticate(model)
 
 
+def testCase_2(model):
+    addUser(User(None, "hayri", "hayri"))
+    userlist = getAllUsers()
+    model.addNewFace(None, None, userlist[1])
+    res = model.queryFace(None, userlist[1])
+    print(res)
+
+
+def testCase_3(model):
+    while True:
+        username = input("please enter username\n")
+        if username == "q":
+            break
+        addUser(User(None, username, username))
+        model.addNewFace(None, None, getUserByUsername(username))
+
+    logging.info("querying;")
+    while True:
+        username = input("please enter username\n")
+        if username == "q":
+            break
+        user = getUserByUsername(username)
+        if user is None:
+            logging.error("User not found..")
+            continue
+        res = model.queryFace(None, user)
+        print(res)
+
+
 if __name__ == '__main__':
     initilization()
     recognizer = cv2.face.LBPHFaceRecognizer_create(radius, neighbour, grid_x, grid_y)
     model = Recognizer(recognizer)
+    userlist = getAllUsers()
 
-    testCase(model)
+    # model.addNewFace(None, "test_data/train/abdullahgul/", userlist[0])
+    # testCase_2(model)
+    # testCase(model)
