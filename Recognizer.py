@@ -72,7 +72,7 @@ class Recognizer:
         gray1 = gray.copy()
         # gray = cv2.equalizeHist(gray)
         gray = cv2.resize(gray, (0, 0), fx=1 / 3, fy=1 / 3)
-        faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=4, minSize=(30, 30))
+        faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(5, 5))
         for _, face in enumerate(faces):
             Draw_Rect(img, face * 3, [0, 255, 0])
             x, y, w, h = face * 3
@@ -80,8 +80,9 @@ class Recognizer:
             # Check that the face is recognized
             if conf > int(config.recognizer_options['confident_threshold']):
                 DispID(face * 3, "CANNOT RECOGNIZE ({}) ({})".format(conf, recognized_id), img)
+                logging.info("Cannot found; conf= {0}".format(conf))
             else:
-                if getUserById(recognized_id) is not None and recognized_id != user_id:
+                if getUserById(recognized_id) is not None and str(recognized_id) == user_id:
                     DispID(face * 3, getUserById(recognized_id).name, img)
                     name = getUserById(recognized_id).name
                     logging.info("{0} found with conf {1}".format(name, conf))
@@ -124,6 +125,7 @@ class Recognizer:
                 break
         cv2.destroyAllWindows()
         input_.release()
+        return False
 
     def queryFace(self, input_video, user):
         if not (os.path.isfile(recognizer_file_name)):
