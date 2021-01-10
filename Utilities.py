@@ -85,10 +85,10 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
     while True:
         # Capture, decode and return the next frame of the video
         ret, image = cam.read()
-        cv2.imshow('Video', image)
         # Convert to gray-scale image
         if image is None:
             break
+        cv2.imshow('Video', image)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # Search for faces in the gray-scale image
         # faces is an array of coordinates of the rectangles where faces exists

@@ -107,13 +107,13 @@ class Recognizer:
         cv2.destroyAllWindows()
         input_.release()
 
-    def queryFace(self, input, user):
+    def queryFace(self, input_video, user):
         if not (os.path.isfile(recognizer_file_name)):
             raise RuntimeError("file: %s not found" % recognizer_file_name)
         self.recognizer.read(recognizer_file_name)
 
-        if input is not None:
-            video = cv2.VideoCapture(input)
+        if input_video is not None:
+            video = cv2.VideoCapture(input_video)
             return self.readInputAndPredict(video, user.id)
         else:
             camera = cv2.VideoCapture(config.recognizer_options['camera_id'])
