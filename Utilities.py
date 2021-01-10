@@ -95,7 +95,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # Search for faces in the gray-scale image
         # faces is an array of coordinates of the rectangles where faces exists
-        faces = recognizer.Face_Cascade.detectMultiScale(gray, scaleFactor=1.098, minNeighbors=6, minSize=(50, 50))
+        faces = recognizer.Face_Cascade.detectMultiScale(gray, scaleFactor=1.098, minNeighbors=8, minSize=(5, 5))
         # check if there are only 1 face in the photo
         if len(faces) > 1:
             logging.error("There are more than one face")
@@ -137,9 +137,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                             logging.info("Rotation angle : {:.2f} degree".format(angle_degree))
                             # draw rectangles
                             Draw_Rect(image, face, [0, 255, 0])
-                            cv2.rectangle(image_chunk, (rx, ry), (rx + rw, ry + rh), (255, 255, 255), 2)
-                            cv2.rectangle(image_chunk, (lx + int(w / 2), ly), (lx + int(w / 2) + lw, ly + lh),
-                                          (0, 255, 255), 2)
+
                             cv2.imshow('Video', image)
                             # Image rotation
                             # Find the center of the image
