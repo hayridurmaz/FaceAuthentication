@@ -33,9 +33,27 @@ class Recognizer:
         self.recognizer.write(recognizer_file_name)
         logging.info("trained with {0} images successfully.".format(len(np.unique(ids))))
 
-    def addNewFace(self, input_video, isVideo, user):
-        if isVideo:
-            video = cv2.VideoCapture(input_video)
+    def addNewFace(self, input_video_path, input_video_folder_path, user):
+        if input_video_path is not None:
+            video = cv2.VideoCapture(input_video_path)
+        # elif input_video_folder_path is not None:
+        # TODO:
+        #     # input_video = cv2.VideoWriter('{}video.avi'.format(input_video_folder_path), -1, 1, (600, 480))
+        #     # print(os.listdir(input_video_folder_path))
+        #     # imagePaths = [os.path.join(input_video_folder_path, f) for f in os.listdir(input_video_folder_path)]
+        #     # print(imagePaths)
+        #     # for image in imagePaths:
+        #     #     input_video.write(cv2.imread(image))
+        #     # input_video.release()
+        #     video = cv2.VideoCapture('{}%04d.jpg'.format(input_video_folder_path), cv2.CAP_IMAGES)
+        #     video.release()
+        #     while True:
+        #         ret, image = video.read()
+        #         # Convert to gray-scale image
+        #         if image is None:
+        #             logging.error("NONE")
+        #             continue
+        #         cv2.imshow('Video', image)
         else:
             video = cv2.VideoCapture(config.recognizer_options['camera_id'])
             video.set(3, 640)
