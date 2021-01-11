@@ -20,6 +20,7 @@ class Recognizer:
         self._Face_Cascade = cv2.CascadeClassifier(config.cascade_files['face_cascade_path'])
         self._Right_Eye_Cascade = cv2.CascadeClassifier(config.cascade_files['right_eye_cascade_path'])
         self._Left_Eye_Cascade = cv2.CascadeClassifier(config.cascade_files['left_eye_cascade_path'])
+        self._Both_Eye_Cascade = cv2.CascadeClassifier(config.cascade_files['both_eye_cascade_path'])
         self.recognizer = recognizer
         create_folder_if_not_exist("dataset/")
 
@@ -63,12 +64,13 @@ class Recognizer:
         # Training the model
         self.train()
 
-    def predict(self, img, user_id):
+    def predict(self, img, user_id, detectBlink):
         start = time.time()
         authorized = False
+        eyeDetected = False
         if img is None:
             logging.info("Reaching the end of the video, exiting..")
-            return None, False, None, time.time() - start
+            return None, False, None, time.time() - start, False
         # cv2.imshow('Video', img)
         # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # gray1 = gray.copy()
@@ -171,6 +173,15 @@ class Recognizer:
             Draw_Rect(img, face, [0, 0, 255])
             x, y, w, h = face
             recognized_id, conf = self.recognizer.predict(gray1[y:y + h, x:x + w])
+            if detectBlink:
+                # eye detection for blink detection
+                eyes = self._Both_Eye_Cascade.detectMultiScale(gray1, 1.3, 5, minSize=(10, 10))
+                # Examining the length of eyes object for eyes
+                if len(eyes) >= 2:
+                    # Check if program is running for detection
+                    eyeDetected = True
+                else:
+                    eyeDetected = False
             # Check that the face is recognized
             if conf > int(config.recognizer_options['confident_threshold']):
                 DispID(face, "NOT AUTHENTICATED", img)
@@ -189,9 +200,9 @@ class Recognizer:
                     authorized = False
         end = time.time()
         logging.warning("PREDICTION FUNC took {} seconds. ".format(end - start))
-        return img, authorized, f, end - start
+        return img, authorized, f, end - start, eyeDetected
 
-    def readInputAndPredict(self, input_, user_id):
+    def readInputAndPredict(self, input_, user_id, blink_detection):
         # frame_width = int(input_.get(3))
         # frame_height = int(input_.get(4))
         # size = (frame_width, frame_height)
@@ -200,6 +211,10 @@ class Recognizer:
         #                          10, size)
         count = 0
         start = time.time()
+        oldEye = False
+        blinkDetected = False
+        eyeReturnValue = False
+        isStart = True
         while True:
             try:
                 curr = time.time()
@@ -208,7 +223,18 @@ class Recognizer:
                     return False
 
                 ret, img = input_.read()
-                predicted, authorized, face, time_taken = self.predict(img, user_id)
+                predicted, authorized, face, time_taken, eyeReturnValue = self.predict(img, user_id, blink_detection)
+                # Blink detection
+                if isStart:
+                    oldEye = eyeReturnValue
+                    isStart = False
+                else:
+                    if eyeReturnValue != oldEye:
+                        blinkDetected = True
+                        logging.info("Blink detected")
+                    else:
+                        oldEye = eyeReturnValue
+
                 for i in range(int(time_taken * 25)):
                     input_.read()
                 ret, img = input_.read()
@@ -218,9 +244,12 @@ class Recognizer:
                     count = 0
 
                 if count > int(config.recognizer_options['number_of_recognizing_threshold']):
-                    DispID(face, 'AUTHENTICATED', img)
-                    time.sleep(2)
-                    return True
+                    if blinkDetected or not blink_detection:
+                        DispID(face, 'AUTHENTICATED', img)
+                        time.sleep(2)
+                        return True
+                    else:
+                        logging.error("Authentication is successful but no blink detected")
                 # result.write(predicted)
                 if predicted is not None:
                     cv2.imshow('video', predicted)
@@ -242,12 +271,13 @@ class Recognizer:
             raise RuntimeError("file: %s not found" % recognizer_file_name)
         self.recognizer.read(recognizer_file_name)
 
+        # Disable blink detection when video input
         if input_video is not None:
             video = cv2.VideoCapture(input_video)
-            return self.readInputAndPredict(video, user.id)
+            return self.readInputAndPredict(video, user.id, False)
         else:
             camera = cv2.VideoCapture(config.recognizer_options['camera_id'])
-            return self.readInputAndPredict(camera, user.id)
+            return self.readInputAndPredict(camera, user.id, True)
 
     @property
     def Face_Cascade(self):
