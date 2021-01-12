@@ -277,7 +277,8 @@ class Recognizer:
             return self.readInputAndPredict(video, user.id, False)
         else:
             camera = cv2.VideoCapture(config.recognizer_options['camera_id'])
-            return self.readInputAndPredict(camera, user.id, True)
+            blink_detection = not config.recognizer_options['disable_blink_detection']
+            return self.readInputAndPredict(camera, user.id, blink_detection)
 
     @property
     def Face_Cascade(self):

@@ -14,7 +14,8 @@ recognizer_options = dict(
     camera_id=0,
     timeout=100,
     number_of_recognizing_threshold=2,
-    confident_threshold=200
+    confident_threshold=200,
+    disable_blink_detection=True
 )
 user_file = 'dataset/users.csv'
 cascade_files = dict(
