@@ -26,15 +26,18 @@ def initilization():
     create_folder_if_not_exist(config.recognizer_options['user_dataset'])
 
 
-def addUsers():
+def addUsers(model_recognizer):
     for f in os.listdir("test_data/train"):
-        addUser(User(None, f[:f.index(".")], f[:f.index(".")]))
+        if getUserByUsername(f[:f.index(".")]) is None:
+            addUser(User(None, f[:f.index(".")], f[:f.index(".")]))
+            u = getUserByUsername(f[:f.index(".")])
+            model_recognizer.addNewFace("test_data/train/{}.avi".format(u.username), None, u)
 
 
-def train(model_recognizer):
-    user_list = getAllUsers()
-    for u in user_list:
-        model_recognizer.addNewFace("test_data/train/{}.avi".format(u.username), None, u)
+# def train(model_recognizer):
+#     user_list = getAllUsers()
+#     for u in user_list:
+#         model_recognizer.addNewFace("test_data/train/{}.avi".format(u.username), None, u)
 
 
 def authenticate(model):
@@ -44,15 +47,16 @@ def authenticate(model):
         res = model.queryFace("test_data/query/{}.avi".format(u.username), u)
         if res:
             TP = TP + 1
+            logging.info("Able to authenticate {}".format(u.username))
         else:
             FN = FN + 1
+            logging.error("NOT ABLE to authenticate {}".format(u.username))
     print("TP= {0},\nFN={1}".format(TP, FN))
 
 
 def testCase(model):
     # Comment unneeded lines!
-    # addUsers()
-    # train(model)
+    addUsers(model)
     authenticate(model)
 
 
@@ -98,5 +102,5 @@ if __name__ == '__main__':
     recognizer = cv2.face.LBPHFaceRecognizer_create(radius, neighbour, grid_x, grid_y)
     model = Recognizer(recognizer)
 
-    # testCase_2(model)
-    testCase(model)
+    testCase_2(model)
+    # testCase(model)
