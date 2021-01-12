@@ -13,7 +13,7 @@ recognizer_options = dict(
     file_name='train.yaml',
     camera_id=0,
     timeout=100,
-    number_of_recognizing_threshold=2,
+    number_of_recognizing_threshold=3,
     confident_threshold=200,
     disable_blink_detection=True
 )

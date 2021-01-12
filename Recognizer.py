@@ -202,7 +202,7 @@ class Recognizer:
         logging.warning("PREDICTION FUNC took {} seconds. ".format(end - start))
         return img, authorized, f, end - start, eyeDetected
 
-    def readInputAndPredict(self, input_, user_id, blink_detection):
+    def readInputAndPredict(self, input_, user_id, blink_detection, is_camera):
         # frame_width = int(input_.get(3))
         # frame_height = int(input_.get(4))
         # size = (frame_width, frame_height)
@@ -234,14 +234,12 @@ class Recognizer:
                         logging.info("Blink detected")
                     else:
                         oldEye = eyeReturnValue
-
-                for i in range(int(time_taken * 25)):
-                    input_.read()
+                if is_camera:
+                    for i in range(int(time_taken * 25 / 2)):
+                        input_.read()
                 ret, img = input_.read()
                 if authorized:
                     count = count + 1
-                else:
-                    count = 0
 
                 if count > int(config.recognizer_options['number_of_recognizing_threshold']):
                     if blinkDetected or not blink_detection:
@@ -274,11 +272,11 @@ class Recognizer:
         # Disable blink detection when video input
         if input_video is not None:
             video = cv2.VideoCapture(input_video)
-            return self.readInputAndPredict(video, user.id, False)
+            return self.readInputAndPredict(video, user.id, False, False)
         else:
             camera = cv2.VideoCapture(config.recognizer_options['camera_id'])
             blink_detection = not config.recognizer_options['disable_blink_detection']
-            return self.readInputAndPredict(camera, user.id, blink_detection)
+            return self.readInputAndPredict(camera, user.id, blink_detection, True)
 
     @property
     def Face_Cascade(self):

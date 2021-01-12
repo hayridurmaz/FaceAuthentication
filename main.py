@@ -102,5 +102,9 @@ if __name__ == '__main__':
     recognizer = cv2.face.LBPHFaceRecognizer_create(radius, neighbour, grid_x, grid_y)
     model = Recognizer(recognizer)
 
-    testCase_2(model)
-    # testCase(model)
+    # testCase_2(model)
+    testCase(model)
+    testCase(model)
+    # u = getUserByUsername("hayri")
+    # res = model.queryFace("test_data/query/{}.avi".format(u.username), u)
+    # print(res)
