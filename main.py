@@ -56,8 +56,9 @@ def authenticate(model):
 
 def testCase(model):
     # Comment unneeded lines!
-    addUsers(model)
-    authenticate(model)
+    for i in range(10):
+        addUsers(model)
+        authenticate(model)
 
 
 def testCase_2(model):
@@ -103,7 +104,6 @@ if __name__ == '__main__':
     model = Recognizer(recognizer)
 
     # testCase_2(model)
-    testCase(model)
     testCase(model)
     # u = getUserByUsername("hayri")
     # res = model.queryFace("test_data/query/{}.avi".format(u.username), u)
