@@ -57,7 +57,7 @@ def authenticate(model):
 def testCase(model):
     # Comment unneeded lines!
     for i in range(10):
-        addUsers(model)
+        # addUsers(model)
         authenticate(model)
 
 
