@@ -6,7 +6,7 @@ splitChar = ","
 
 
 class User:
-    file = open(config.user_file, "r")
+    file = open(config.user_file, "r+")
     userStrList = file.readlines()
     ID_seq = size(userStrList)
 
@@ -22,7 +22,7 @@ class User:
 
 def getAllUsers():
     userList = []
-    file = open(config.user_file, "r")
+    file = open(config.user_file, "r+")
     userStrList = file.readlines()
     file.close()
     for string in userStrList:

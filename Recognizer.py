@@ -10,6 +10,7 @@ import config
 from User import getUserById
 from Utilities import create_folder_if_not_exist, create_dataset_for_user, Draw_Rect, DispID, getImagesAndLabels
 
+
 numberOfSamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
 recognizer_file_name = config.recognizer_options['file_name']
