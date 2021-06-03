@@ -5,11 +5,17 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-
+from deepface.commons import functions
 import config
 
 dataset_path = config.recognizer_options['user_dataset']
 
+
+def img_to_encoding(image_path, model):
+    input_shape = model.layers[0].input_shape[0][1:3]
+    img = functions.preprocess_face(image_path, input_shape)
+    img_representation = model.predict(img)[0, :]
+    return img_representation
 
 def create_file_if_not_exist(file_name):
     if not os.path.exists(file_name):

@@ -9,12 +9,14 @@ import numpy as np
 import config
 from User import getUserById
 from Utilities import create_folder_if_not_exist, create_dataset_for_user, Draw_Rect, DispID, getImagesAndLabels
+from mtcnn.mtcnn import MTCNN
 
 
 numberOfSamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
 recognizer_file_name = config.recognizer_options['file_name']
 
+model = MTCNN(weights_file='weights/mtcnn_weights.npy')
 
 class Recognizer:
     def __init__(self, recognizer):
