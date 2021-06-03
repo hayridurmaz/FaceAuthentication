@@ -9,6 +9,7 @@ from deepface.commons import functions
 import config
 
 dataset_path = config.recognizer_options['user_dataset']
+database_path = config.recognizer_options['user_database']
 
 
 def img_to_encoding(image_path, model):
@@ -16,6 +17,7 @@ def img_to_encoding(image_path, model):
     img = functions.preprocess_face(image_path, input_shape)
     img_representation = model.predict(img)[0, :]
     return img_representation
+
 
 def create_file_if_not_exist(file_name):
     if not os.path.exists(file_name):
@@ -59,7 +61,7 @@ def getImagesAndLabels():
     for imagePath in imagePaths:
         img = cv2.imread(imagePath, 0)
         img_numpy = np.array(img, 'uint8')
-        user_id = int(os.path.split(imagePath)[- 1].split(".")[0])
+        user_id = int(os.path.split(imagePath)[- 1].split(".")[0])  # Burada sorun olabilir.
         faceSamples.append(img_numpy)
         ids.append(user_id)
     return faceSamples, ids
@@ -153,8 +155,10 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                                                            flags=cv2.INTER_LINEAR)
                             # print("\n[INFO] Adding image number {} to the dataset".format(count))
                             # Save the correct inverted image
+                            # create_folder_if_not_exist(database_path + str(user.id) + '/')
                             cv2.imwrite(
-                                config.recognizer_options['user_dataset'] + str(user.id) + '.' + str(count) + ".jpg ",
+                                dataset_path + str(user.id) + '.' + str(
+                                    count) + ".jpg ",
                                 rotated_image)
                             axs[int(count / 5)][count % 5].imshow(rotated_image, cmap='gray', vmin=0, vmax=255)
                             axs[int(count / 5)][count % 5].set_title(
@@ -173,8 +177,9 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                     # Save the correct inverted image
                     if abs(gray_chunk.shape[0] - gray_chunk.shape[1]) > 20:
                         continue
+                    # create_folder_if_not_exist(database_path + str(user.id) + '/')
                     cv2.imwrite(
-                        config.recognizer_options['user_dataset'] + str(user.id) + '.' + str(count) + ".jpg ",
+                        dataset_path + str(user.id) + '.' + str(count) + ".jpg ",
                         gray_chunk)
                     axs[int(count / 5)][count % 5].imshow(gray_chunk, cmap='gray', vmin=0, vmax=255)
                     axs[int(count / 5)][count % 5].set_title(
