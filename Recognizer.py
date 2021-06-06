@@ -2,21 +2,25 @@ import cv2
 import logging
 import os
 import time
-
+import pickle
 import cv2
 import numpy as np
+from deepface import DeepFace
 
 import config
 from User import getUserById
-from Utilities import create_folder_if_not_exist, create_dataset_for_user, Draw_Rect, DispID, getImagesAndLabels
+from Utilities import create_folder_if_not_exist, create_dataset_for_user, Draw_Rect, DispID, getImagesAndLabels, \
+    img_to_encoding, getImagesAndLabelsForUser
 from mtcnn.mtcnn import MTCNN
-
 
 numberOfSamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
 recognizer_file_name = config.recognizer_options['file_name']
+model_file_name = config.recognizer_options['model_file']
 
-model = MTCNN(weights_file='weights/mtcnn_weights.npy')
+
+# model = MTCNN(weights_file='weights/mtcnn_weights.npy')
+
 
 class Recognizer:
     def __init__(self, recognizer):
@@ -24,17 +28,38 @@ class Recognizer:
         self._Right_Eye_Cascade = cv2.CascadeClassifier(config.cascade_files['right_eye_cascade_path'])
         self._Left_Eye_Cascade = cv2.CascadeClassifier(config.cascade_files['left_eye_cascade_path'])
         self._Both_Eye_Cascade = cv2.CascadeClassifier(config.cascade_files['both_eye_cascade_path'])
-        self.recognizer = recognizer
         create_folder_if_not_exist("dataset/")
+        self.ids_and_representations = []
+        self.readModel()
+
+    def saveModel(self):
+        with open(model_file_name, 'wb') as f:
+            pickle.dump(self.ids_and_representations, f)
+
+    def readModel(self):
+        try:
+            with open(model_file_name, 'rb') as fp:
+                self.ids_and_representations = pickle.load(fp)
+        except Exception as e:
+            logging.error(e)
+            self.ids_and_representations = []
+
+    def add_faces_of_one_user(self, user):
+        images = getImagesAndLabelsForUser(user)
+        for img in images:
+            try:
+                representation = img_to_encoding(img)
+                self.ids_and_representations.append((user.id, representation))
+            except Exception as e:
+                logging.error(e)
+                continue
+        self.saveModel()
 
     def train(self):
         logging.info("Training...")
         # slight delay
         time.sleep(1)
         faces, ids = getImagesAndLabels()
-        self.recognizer.update(faces, np.array(ids))
-        # Saving the model
-        self.recognizer.write(recognizer_file_name)
         logging.info("trained with {0} images successfully.".format(len(np.unique(ids))))
 
     def addNewFace(self, input_video_path, input_video_folder_path, user):
@@ -64,10 +89,14 @@ class Recognizer:
             video.set(4, 480)
         # create a dataset for further model training
         create_dataset_for_user(video, user, numberOfSamples, self)
+        self.add_faces_of_one_user(user)
         # Training the model
-        self.train()
+        # self.train()
 
     def predict(self, img, user_id, detectBlink):
+        # df = DeepFace.find(img_path=img, db_path=config.recognizer_options['user_database'])
+        # return img, df, None, 0, True
+
         start = time.time()
         authorized = False
         eyeDetected = False
@@ -77,6 +106,7 @@ class Recognizer:
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray1 = gray.copy()
+        org_image = img.copy()
         # gray = cv2.equalizeHist(gray)
         # gray = cv2.resize(gray, (0, 0), fx=1 / 3, fy=1 / 3)
         faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(30, 30))
@@ -84,7 +114,16 @@ class Recognizer:
         for _, face in enumerate(faces):
             Draw_Rect(img, face, [0, 0, 255])
             x, y, w, h = face
-            recognized_id, conf = self.recognizer.predict(gray1[y:y + h, x:x + w])
+
+            min_distance = 1000
+            min_id = -1
+            for tuple in self.ids_and_representations:
+                embedding = img_to_encoding(org_image[y:y + h, x:x + w])
+                dist = np.linalg.norm(embedding - tuple[1])
+                if dist < min_distance:
+                    min_distance = dist
+                    recognized_id = id
+
             if detectBlink:
                 # eye detection for blink detection
                 eyes = self._Both_Eye_Cascade.detectMultiScale(gray1, 1.3, 5, minSize=(10, 10))
@@ -95,20 +134,20 @@ class Recognizer:
                 else:
                     eyeDetected = False
             # Check that the face is recognized
-            if conf > int(config.recognizer_options['confident_threshold']):
+            if min_distance > int(config.recognizer_options['confident_threshold']):
                 DispID(face, "NOT AUTHENTICATED", img)
-                logging.info("Cannot found; conf= {0}".format(conf))
+                logging.info("Cannot found; conf= {0}".format(min_distance))
             else:
                 if getUserById(recognized_id) is not None and str(recognized_id) == user_id:
                     DispID(face, getUserById(recognized_id).name, img)
                     name = getUserById(recognized_id).name
-                    logging.info("{0} found with conf {1}".format(name, conf))
+                    logging.info("{0} found with conf {1}".format(name, min_distance))
                     f = face
                     authorized = True
                 else:
                     DispID(face, getUserById(recognized_id).name, img)
                     name = getUserById(recognized_id).name
-                    logging.info("{0} found with conf {1}".format(name, conf))
+                    logging.info("{0} found with conf {1}".format(name, min_distance))
                     authorized = False
         end = time.time()
         logging.warning("PREDICTION FUNC took {} seconds. ".format(end - start))
@@ -177,9 +216,7 @@ class Recognizer:
         return False
 
     def queryFace(self, input_video, user):
-        if not (os.path.isfile(recognizer_file_name)):
-            raise RuntimeError("file: %s not found" % recognizer_file_name)
-        self.recognizer.read(recognizer_file_name)
+        self.readModel()
 
         # Disable blink detection when video input
         if input_video is not None:

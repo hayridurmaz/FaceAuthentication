@@ -56,9 +56,9 @@ def authenticate(model):
 
 def testCase(model):
     # Comment unneeded lines!
-    for i in range(10):
-        # addUsers(model)
-        authenticate(model)
+    # for i in range(10):
+    # addUsers(model)
+    authenticate(model)
 
 
 def testCase_2(model):
@@ -102,9 +102,13 @@ if __name__ == '__main__':
     initilization()
     recognizer = cv2.face.LBPHFaceRecognizer_create(radius, neighbour, grid_x, grid_y)
     model = Recognizer(recognizer)
-
+    print(model)
     # testCase_2(model)
+
+
     testCase(model)
+
+
     # u = getUserByUsername("hayri")
     # res = model.queryFace("test_data/query/{}.avi".format(u.username), u)
     # print(res)

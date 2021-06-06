@@ -5,16 +5,25 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+
+from deepface.basemodels import VGGFace
 from deepface.commons import functions
 import config
 
 dataset_path = config.recognizer_options['user_dataset']
 database_path = config.recognizer_options['user_database']
 
+model = VGGFace.loadModel()
 
-def img_to_encoding(image_path, model):
+
+# model = Facenet.loadModel()
+# model = OpenFace.loadModel()
+# model = FbDeepFace.loadModel()
+
+
+def img_to_encoding(image_path):
     input_shape = model.layers[0].input_shape[0][1:3]
-    img = functions.preprocess_face(image_path, input_shape)
+    img = functions.preprocess_face(image_path, input_shape, enforce_detection=False)
     img_representation = model.predict(img)[0, :]
     return img_representation
 
@@ -67,6 +76,20 @@ def getImagesAndLabels():
     return faceSamples, ids
 
 
+def getImagesAndLabelsForUser(user):
+    imagePaths = [os.path.join(dataset_path, f) for f in os.listdir(dataset_path)]
+    faceSamples = []
+    ids = []
+    for imagePath in imagePaths:
+        img = cv2.imread(imagePath)
+        img_numpy = np.array(img, 'uint8')
+        user_id = int(os.path.split(imagePath)[- 1].split(".")[0])
+        if str(user_id) == user.id:
+            faceSamples.append(img_numpy)
+            ids.append(user_id)
+    return faceSamples
+
+
 def DispID(face, NAME, Image):
     x, y, w, h = face
     pt1 = (int(x + w / 2.0 - 50), int(y + h + 40))
@@ -96,6 +119,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
     while True:
         # Capture, decode and return the next frame of the video
         ret, image = cam.read()
+        base_image = image
         # Convert to gray-scale image
         if image is None:
             break
@@ -114,7 +138,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                 # For gray_chunck, the coordinates are used for further transformation
                 x, y, w, h = face
                 gray_chunk = gray[y - 30: y + h + 30, x - 30: x + w + 30]
-                image_chunk = image[y: y + h, x: x + w]
+                image_chunk = image[y - 30: y + h + 30, x - 30: x + w + 30]
                 # Search for the right eye
                 Right_Eye = recognizer.Right_Eye_Cascade.detectMultiScale(gray[y: y + int(h / 2), x: x + int(w / 2)],
                                                                           scaleFactor=1.05, minNeighbors=6,
@@ -149,9 +173,9 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                             cv2.imshow('Video', image)
                             # Image rotation
                             # Find the center of the image
-                            image_center = tuple(np.array(gray_chunk.shape) / 2)
+                            image_center = tuple(np.array(image_chunk.shape) / 2)
                             rot_mat = cv2.getRotationMatrix2D(image_center, angle_degree, 1.0)
-                            rotated_image = cv2.warpAffine(gray_chunk, rot_mat, gray_chunk.shape,
+                            rotated_image = cv2.warpAffine(image_chunk, rot_mat, image_chunk.shape,
                                                            flags=cv2.INTER_LINEAR)
                             # print("\n[INFO] Adding image number {} to the dataset".format(count))
                             # Save the correct inverted image
@@ -160,7 +184,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                                 dataset_path + str(user.id) + '.' + str(
                                     count) + ".jpg ",
                                 rotated_image)
-                            axs[int(count / 5)][count % 5].imshow(rotated_image, cmap='gray', vmin=0, vmax=255)
+                            axs[int(count / 5)][count % 5].imshow(rotated_image, vmin=0, vmax=255)
                             axs[int(count / 5)][count % 5].set_title(
                                 str(user.id) + '.' + str(count) + ".jpg ",
                                 fontdict={'fontsize': 15, 'fontweight': 'medium'})
@@ -175,13 +199,13 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                     # Find the center of the image
                     # print("\n[INFO] Adding image number {} to the dataset".format(count))
                     # Save the correct inverted image
-                    if abs(gray_chunk.shape[0] - gray_chunk.shape[1]) > 20:
+                    if abs(image_chunk.shape[0] - image_chunk.shape[1]) > 20:
                         continue
                     # create_folder_if_not_exist(database_path + str(user.id) + '/')
                     cv2.imwrite(
                         dataset_path + str(user.id) + '.' + str(count) + ".jpg ",
-                        gray_chunk)
-                    axs[int(count / 5)][count % 5].imshow(gray_chunk, cmap='gray', vmin=0, vmax=255)
+                        image_chunk)
+                    axs[int(count / 5)][count % 5].imshow(image_chunk, vmin=0, vmax=255)
                     axs[int(count / 5)][count % 5].set_title(
                         str(user.id) + '.' + str(count) + ".jpg ",
                         fontdict={'fontsize': 15, 'fontweight': 'medium'})

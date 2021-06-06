@@ -128,3 +128,4 @@ dmypy.json
 dataset/
 test_data/
 train.yaml
+database/

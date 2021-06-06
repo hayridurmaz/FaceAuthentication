@@ -1,6 +1,7 @@
 #!pip install deepface
 from deepface.basemodels import VGGFace, OpenFace, Facenet, FbDeepFace
 from deepface.commons import functions
+from deepface import DeepFace
 
 import matplotlib.pyplot as plt
 import numpy as np
