@@ -10,13 +10,15 @@ from deepface import DeepFace
 import config
 from User import getUserById
 from Utilities import create_folder_if_not_exist, create_dataset_for_user, Draw_Rect, DispID, getImagesAndLabels, \
-    img_to_encoding, getImagesAndLabelsForUser
+    img_to_encoding, getImagesAndLabelsForUser, showImage
 from mtcnn.mtcnn import MTCNN
 
 numberOfSamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
 recognizer_file_name = config.recognizer_options['file_name']
 model_file_name = config.recognizer_options['model_file']
+
+detector = MTCNN()
 
 
 # model = MTCNN(weights_file='weights/mtcnn_weights.npy')
@@ -82,7 +84,7 @@ class Recognizer:
         #         if image is None:
         #             logging.error("NONE")
         #             continue
-        #         cv2.imshow('Video', image)
+        #         showImage(image)
         else:
             video = cv2.VideoCapture(config.recognizer_options['camera_id'])
             video.set(3, 640)
@@ -109,20 +111,29 @@ class Recognizer:
         org_image = img.copy()
         # gray = cv2.equalizeHist(gray)
         # gray = cv2.resize(gray, (0, 0), fx=1 / 3, fy=1 / 3)
-        faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(30, 30))
+        # faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(30, 30))
+
+        faces = detector.detect_faces(img)
         f = None
         for _, face in enumerate(faces):
             Draw_Rect(img, face, [0, 0, 255])
-            x, y, w, h = face
+            x, y, w, h = face['box']
 
             min_distance = 1000
             min_id = -1
             for tuple in self.ids_and_representations:
-                embedding = img_to_encoding(org_image[y:y + h, x:x + w])
+                start=time.time()
+                embedding = img_to_encoding(org_image)
+                end = time.time()
+                logging.warning("embedding FUNC took {} seconds. ".format(end - start))
+                start = time.time()
                 dist = np.linalg.norm(embedding - tuple[1])
+                end = time.time()
+                logging.warning("norm FUNC took {} seconds. ".format(end - start))
+                start = time.time()
                 if dist < min_distance:
                     min_distance = dist
-                    recognized_id = id
+                    recognized_id = tuple[0]
 
             if detectBlink:
                 # eye detection for blink detection
@@ -201,7 +212,7 @@ class Recognizer:
                         logging.error("Authentication is successful but no blink detected")
                 # result.write(predicted)
                 if predicted is not None:
-                    cv2.imshow('video', predicted)
+                    showImage(predicted)
             except Exception as e:
                 logging.error(e)
                 logging.error("Something went wrong!!!")

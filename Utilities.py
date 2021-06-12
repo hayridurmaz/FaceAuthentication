@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
+from deepface import DeepFace
 from deepface.basemodels import VGGFace
 from deepface.commons import functions
 import config
@@ -22,10 +23,8 @@ model = VGGFace.loadModel()
 
 
 def img_to_encoding(image_path):
-    input_shape = model.layers[0].input_shape[0][1:3]
-    img = functions.preprocess_face(image_path, input_shape, enforce_detection=False)
-    img_representation = model.predict(img)[0, :]
-    return img_representation
+    showImage(image_path)
+    return DeepFace.represent(image_path, model_name='Facenet')
 
 
 def create_file_if_not_exist(file_name):
@@ -52,7 +51,7 @@ def FileRead(file_path="users_name.txt"):
 
 
 def Draw_Rect(Image, face, color):
-    x, y, w, h = face
+    x, y, w, h = face['box']
     cv2.line(Image, (x, y), (int(x + (w / 5)), y), color, 2)
     cv2.line(Image, (int(x + ((w / 5) * 4)), y), (x + w, y), color, 2)
     cv2.line(Image, (x, y), (x, int(y + (h / 5))), color, 2)
@@ -111,6 +110,11 @@ def DispID(face, NAME, Image):
 #     return "sa"
 
 
+def showImage(image, title='Video'):
+    cv2.imshow(title, image)
+    cv2.waitKey(delay=1)
+
+
 def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
     fig, axs = plt.subplots(10, 5, figsize=(20, 20), facecolor='w', edgecolor='k')
     fig.subplots_adjust(hspace=.5, wspace=.001)
@@ -123,7 +127,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
         # Convert to gray-scale image
         if image is None:
             break
-        cv2.imshow('Video', image)
+        showImage(image)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # Search for faces in the gray-scale image
         # faces is an array of coordinates of the rectangles where faces exists
@@ -170,7 +174,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                             # draw rectangles
                             Draw_Rect(image, face, [0, 255, 0])
 
-                            cv2.imshow('Video', image)
+                            showImage(image)
                             # Image rotation
                             # Find the center of the image
                             image_center = tuple(np.array(image_chunk.shape) / 2)
@@ -194,7 +198,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
                     # convert degree to rad
                     # draw rectangles
                     Draw_Rect(image, face, [0, 255, 0])
-                    cv2.imshow('Video', image)
+                    showImage(image)
                     # Image rotation
                     # Find the center of the image
                     # print("\n[INFO] Adding image number {} to the dataset".format(count))
