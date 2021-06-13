@@ -4,3 +4,8 @@ coloredlogs
 matplotlib
 numpy
 cv2
+opencv-python
+pandas
+torchvision
+deepface
+mtcnn
