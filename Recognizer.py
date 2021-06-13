@@ -116,7 +116,7 @@ class Recognizer:
         faces = detector.detect_faces(img)
         f = None
         for _, face in enumerate(faces):
-            Draw_Rect(img, face, [0, 0, 255])
+            Draw_Rect(img, face['box'], [0, 0, 255])
             x, y, w, h = face['box']
 
             min_distance = 1000
@@ -146,17 +146,17 @@ class Recognizer:
                     eyeDetected = False
             # Check that the face is recognized
             if min_distance > int(config.recognizer_options['confident_threshold']):
-                DispID(face, "NOT AUTHENTICATED", img)
+                DispID(face['box'], "NOT AUTHENTICATED", img)
                 logging.info("Cannot found; conf= {0}".format(min_distance))
             else:
                 if getUserById(recognized_id) is not None and str(recognized_id) == user_id:
-                    DispID(face, getUserById(recognized_id).name, img)
+                    DispID(face['box'], getUserById(recognized_id).name, img)
                     name = getUserById(recognized_id).name
                     logging.info("{0} found with conf {1}".format(name, min_distance))
                     f = face
                     authorized = True
                 else:
-                    DispID(face, getUserById(recognized_id).name, img)
+                    DispID(face['box'], getUserById(recognized_id).name, img)
                     name = getUserById(recognized_id).name
                     logging.info("{0} found with conf {1}".format(name, min_distance))
                     authorized = False
@@ -205,7 +205,7 @@ class Recognizer:
 
                 if count > int(config.recognizer_options['number_of_recognizing_threshold']):
                     if blinkDetected or not blink_detection:
-                        DispID(face, 'AUTHENTICATED', img)
+                        DispID['box'](face, 'AUTHENTICATED', img)
                         time.sleep(2)
                         return True
                     else:
