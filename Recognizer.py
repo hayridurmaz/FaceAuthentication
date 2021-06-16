@@ -15,7 +15,6 @@ from mtcnn.mtcnn import MTCNN
 
 numberOfSamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
-recognizer_file_name = config.recognizer_options['file_name']
 model_file_name = config.recognizer_options['model_file']
 
 
@@ -114,7 +113,7 @@ class Recognizer:
         # gray = cv2.resize(gray, (0, 0), fx=1 / 3, fy=1 / 3)
         # faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(30, 30))
         recognized_id = None
-        faces = detect_face(img, showImage=False)
+        faces = detect_face(img, isShowImage=False)
         f = None
         embedding = get_embedding(faces)
         min_distance = 10000
@@ -133,7 +132,7 @@ class Recognizer:
                 min_distance = dist
                 recognized_id = tuple[0]
         end_for_loop = time.time()
-        logging.info("For loop took {}".format((end_for_loop - start_for_loop)))
+        logging.debug("For loop took {}".format((end_for_loop - start_for_loop)))
         if detectBlink:
             # eye detection for blink detection
             eyes = self._Both_Eye_Cascade.detectMultiScale(gray1, 1.3, 5, minSize=(10, 10))

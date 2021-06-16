@@ -135,10 +135,10 @@ def showImage(image, title='Video'):
     cv2.waitKey(delay=1)
 
 
-def detect_face(image, showImage=False):
+def detect_face(image, isShowImage=False):
     faces = DeepFace.detectFace(image, detector_backend="ssd")
     faces = cv2.cvtColor(faces, cv2.COLOR_RGB2BGR)
-    if showImage:
+    if isShowImage:
         showImage(faces)
     faces = 255 * faces
     faces = np.asarray(faces, dtype=int)
@@ -166,7 +166,7 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
         # faces = recognizer.Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(30, 30))
         # MTCNN TOOK SOO MUCH!!!
         try:
-            faces = detect_face(image, showImage=True)
+            faces = detect_face(image, isShowImage=True)
             logging.info("Face detector took {} sec".format(time.time() - start_reading_image))
             cv2.imwrite(
                 dataset_path + str(user.id) + '.' + str(
