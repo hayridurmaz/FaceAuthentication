@@ -7,17 +7,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # ----------------------------------------------
-# build face recognition model
+# build face recognition models
 
 model = VGGFace.loadModel()
-# model = Facenet.loadModel()
-# model = OpenFace.loadModel()
-# model = FbDeepFace.loadModel()
+# models = Facenet.loadModel()
+# models = OpenFace.loadModel()
+# models = FbDeepFace.loadModel()
 
 input_shape = model.layers[0].input_shape[0][1:3]
 
-print("model input shape: ", model.layers[0].input_shape[1:])
-print("model output shape: ", model.layers[-1].input_shape[-1])
+print("models input shape: ", model.layers[0].input_shape[1:])
+print("models output shape: ", model.layers[-1].input_shape[-1])
 
 # ----------------------------------------------
 # load images and find embeddings
