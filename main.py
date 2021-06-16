@@ -6,7 +6,7 @@ import os
 import logging
 from Recognizer import Recognizer
 from User import getAllUsers, addUser, User, getUserByUsername
-from Utilities import create_file_if_not_exist, create_folder_if_not_exist
+from Utilities import create_file_if_not_exist, create_folder_if_not_exist, get_embedding
 
 radius = config.lbp_params["radius"]
 neighbour = config.lbp_params["neighbour"]
@@ -17,6 +17,7 @@ TP = 0
 TN = 0
 FP = 0
 FN = 0
+logging.basicConfig(level=logging.WARNING)
 
 
 def initilization():
@@ -24,6 +25,8 @@ def initilization():
     # logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.DEBUG)
     create_file_if_not_exist(config.user_file)
     create_folder_if_not_exist(config.recognizer_options['user_dataset'])
+    # Init the model for gaining some time
+    get_embedding(cv2.imread("hayri.jpg"))
 
 
 def addUsers(model_recognizer):
@@ -55,6 +58,7 @@ def authenticate(model):
 
 
 def testCase(model):
+    logging.info("Test started")
     # Comment unneeded lines!
     # for i in range(10):
     addUsers(model)
@@ -63,7 +67,7 @@ def testCase(model):
 
 def testCase_2(model):
     # addUser(User(None, "hayri", "hayri"))
-    # model.addNewFace(None, None, getUserByUsername("hayri"))
+    # models.addNewFace(None, None, getUserByUsername("hayri"))
     res = model.queryFace(None, getUserByUsername("hayri"))
     print(res)
 
@@ -99,14 +103,15 @@ def testCase_3(model):
 
 
 if __name__ == '__main__':
+    logging.info("Wait while initilization")
     initilization()
     recognizer = cv2.face.LBPHFaceRecognizer_create(radius, neighbour, grid_x, grid_y)
+
     model = Recognizer(recognizer)
-    print(model)
-    # testCase_2(model)
+    # testCase_2(models)
 
     testCase(model)
 
     # u = getUserByUsername("hayri")
-    # res = model.queryFace("test_data/query/{}.avi".format(u.username), u)
+    # res = models.queryFace("test_data/query/{}.avi".format(u.username), u)
     # print(res)

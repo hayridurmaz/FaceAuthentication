@@ -5,29 +5,46 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-
+from keras.models import load_model
 from deepface import DeepFace
 from deepface.basemodels import VGGFace
 from deepface.commons import functions
+from deepface.detectors import FaceDetector
 from mtcnn import MTCNN
+from keras_vggface.vggface import VGGFace
 
 import config
 
 dataset_path = config.recognizer_options['user_dataset']
 database_path = config.recognizer_options['user_database']
 
-model = VGGFace.loadModel()
 detector = MTCNN()
+resnet50_features = VGGFace(model='resnet50', include_top=False, input_shape=(224, 224, 3),
+                            pooling='avg')  # pooling: None, avg or max
 
 
-# model = Facenet.loadModel()
-# model = OpenFace.loadModel()
-# model = FbDeepFace.loadModel()
+# model = load_model('models/facenet_keras_weights.h5')
+
+
+# models = Facenet.loadModel()
+# models = OpenFace.loadModel()
+# models = FbDeepFace.loadModel()
 
 
 def img_to_encoding(image_path):
     showImage(image_path)
     return DeepFace.represent(image_path, model_name='Facenet')
+
+
+def resize(img):
+    img = cv2.resize(img, (224, 224))  # resize image to match model's expected sizing
+    img = img.reshape(1, 224, 224, 3)  # return the image with shaping that TF wants.
+    return img
+
+
+# get the face embedding for one face
+def get_embedding(face_pixels):
+    return resnet50_features.predict(resize(face_pixels))
 
 
 def create_file_if_not_exist(file_name):
@@ -118,81 +135,59 @@ def showImage(image, title='Video'):
     cv2.waitKey(delay=1)
 
 
+def detect_face(image, showImage=False):
+    faces = DeepFace.detectFace(image, detector_backend="ssd")
+    faces = cv2.cvtColor(faces, cv2.COLOR_RGB2BGR)
+    if showImage:
+        showImage(faces)
+    faces = 255 * faces
+    faces = np.asarray(faces, dtype=int)
+    return faces
+
+
 def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
     fig, axs = plt.subplots(10, 5, figsize=(20, 20), facecolor='w', edgecolor='k')
     fig.subplots_adjust(hspace=.5, wspace=.001)
     count = 0  # Variable for counting the number of captured face photos
     logging.info("Please look into the camera and wait ...")
+    start_processing_video = time.time()
     while True:
         # Capture, decode and return the next frame of the video
         ret, image = cam.read()
-        base_image = image.copy()
         # Convert to gray-scale image
         if image is None:
             break
+        # base_image = image.copy()
+        start_reading_image = time.time()
         # showImage(image)
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # Search for faces in the gray-scale image
         # faces is an array of coordinates of the rectangles where faces exists
         # faces = recognizer.Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(30, 30))
-        faces = detector.detect_faces(image)
-        # check if there are only 1 face in the photo
-        if not len(faces) == 1:
-            logging.error("There are either no face or more than one face found")
-            continue
+        # MTCNN TOOK SOO MUCH!!!
         try:
-            for _, face in enumerate(faces):
-                # Images with face coordinates
-                # For gray_chunck, the coordinates are used for further transformation
-                x, y, w, h = face['box']
-                # gray_chunk = gray[y - 30: y + h + 30, x - 30: x + w + 30]
-                image_chunk = base_image[y - 30: y + h + 30, x - 30: x + w + 30]
-                # Search for the right eye
-                Right_Eye = face['keypoints']['right_eye']
-                # check if there only one right eye
-                rx, ry = Right_Eye
-                # Search for the left eye
-                Left_Eye = face['keypoints']['left_eye']
-                lx, ly = Left_Eye
-                # Calculation of the angle between the eyes
-                eyeXdis = abs(lx - rx)
-                eyeYdis = abs(ly - ry)
-                angle_rad = np.arctan(eyeYdis / eyeXdis)
-                # convert degree to rad
-                angle_degree = angle_rad * 180 / np.pi
-                logging.info("Rotation angle : {:.2f} degree".format(angle_degree))
-                # draw rectangles
-                Draw_Rect(image, face['box'], [0, 255, 0])
-                # showImage(image)
-                # Image rotation
-                # Find the center of the image
-                image_center = tuple(np.array(image_chunk.shape) / 2)[:2]
-                rot_mat = cv2.getRotationMatrix2D(image_center, angle_degree, 1.0)
-                rotated_image = cv2.warpAffine(image_chunk, rot_mat, image_chunk.shape[:2],
-                                               flags=cv2.INTER_LINEAR)
-                showImage(rotated_image)
-                # print("\n[INFO] Adding image number {} to the dataset".format(count))
-                # Save the correct inverted image
-                # create_folder_if_not_exist(database_path + str(user.id) + '/')
-                cv2.imwrite(
-                    dataset_path + str(user.id) + '.' + str(
-                        count) + ".jpg ",
-                    rotated_image)
-                axs[int(count / 5)][count % 5].imshow(rotated_image, vmin=0, vmax=255)
-                axs[int(count / 5)][count % 5].set_title(
-                    str(user.id) + '.' + str(count) + ".jpg ",
-                    fontdict={'fontsize': 15, 'fontweight': 'medium'})
-                axs[int(count / 5)][count % 5].axis('off')
-                count += 1
+            faces = detect_face(image, showImage=True)
+            logging.info("Face detector took {} sec".format(time.time() - start_reading_image))
+            cv2.imwrite(
+                dataset_path + str(user.id) + '.' + str(
+                    count) + ".jpg ",
+                faces)
+            logging.info("Saved one photo in {} sec".format(time.time() - start_reading_image))
+            axs[int(count / 5)][count % 5].imshow(faces, vmin=0, vmax=255)
+            axs[int(count / 5)][count % 5].set_title(
+                str(user.id) + '.' + str(count) + ".jpg ",
+                fontdict={'fontsize': 15, 'fontweight': 'medium'})
+            axs[int(count / 5)][count % 5].axis('off')
+            count += 1
         except Exception as e:
-            logging.error(e)
-            logging.error("[Warning] Something went wrong!!!")
+            logging.error("There are either no face or more than one face found")
             continue
         if cv2.waitKey(1) & 0xff == 27:  # To exit the program, press "Esc", wait 100 ms,
             break
         elif count >= numberOfsamples:  # taking pic_num photos
             break
-    logging.info("Dataset has been successfully created for this person...")
+    logging.info("Dataset has been successfully created for this person... in {} secs".format(
+        time.time() - start_processing_video))
     cam.release()
     cv2.destroyAllWindows()
     plt.show()

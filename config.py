@@ -15,7 +15,7 @@ recognizer_options = dict(
     model_file='model_file.pickle',
     camera_id=0,
     timeout=100,
-    number_of_recognizing_threshold=3,
+    number_of_recognizing_threshold=15,
     confident_threshold=200,
     disable_blink_detection=True
 )

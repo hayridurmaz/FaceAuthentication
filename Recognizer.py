@@ -10,7 +10,7 @@ from deepface import DeepFace
 import config
 from User import getUserById
 from Utilities import create_folder_if_not_exist, create_dataset_for_user, Draw_Rect, DispID, getImagesAndLabels, \
-    img_to_encoding, getImagesAndLabelsForUser, showImage
+    img_to_encoding, getImagesAndLabelsForUser, showImage, get_embedding, detect_face
 from mtcnn.mtcnn import MTCNN
 
 numberOfSamples = config.recognizer_options['number_of_samples']
@@ -18,10 +18,10 @@ dataset_name = config.recognizer_options['dataset_name']
 recognizer_file_name = config.recognizer_options['file_name']
 model_file_name = config.recognizer_options['model_file']
 
-detector = MTCNN()
 
+# detector = MTCNN()
 
-# model = MTCNN(weights_file='weights/mtcnn_weights.npy')
+# models = MTCNN(weights_file='weights/mtcnn_weights.npy')
 
 
 class Recognizer:
@@ -42,6 +42,7 @@ class Recognizer:
         try:
             with open(model_file_name, 'rb') as fp:
                 self.ids_and_representations = pickle.load(fp)
+
         except Exception as e:
             logging.error(e)
             self.ids_and_representations = []
@@ -50,7 +51,7 @@ class Recognizer:
         images = getImagesAndLabelsForUser(user)
         for img in images:
             try:
-                representation = img_to_encoding(img)
+                representation = get_embedding(img)
                 self.ids_and_representations.append((user.id, representation))
             except Exception as e:
                 logging.error(e)
@@ -89,22 +90,22 @@ class Recognizer:
             video = cv2.VideoCapture(config.recognizer_options['camera_id'])
             video.set(3, 640)
             video.set(4, 480)
-        # create a dataset for further model training
+        # create a dataset for further models training
         create_dataset_for_user(video, user, numberOfSamples, self)
         self.add_faces_of_one_user(user)
-        # Training the model
+        # Training the models
         # self.train()
 
     def predict(self, img, user_id, detectBlink):
         # df = DeepFace.find(img_path=img, db_path=config.recognizer_options['user_database'])
         # return img, df, None, 0, True
 
-        start = time.time()
+        start_func = time.time()
         authorized = False
         eyeDetected = False
         if img is None:
             logging.info("Reaching the end of the video, exiting..")
-            return None, False, None, time.time() - start, False
+            return None, False, None, time.time() - start_func, False
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray1 = gray.copy()
@@ -112,57 +113,55 @@ class Recognizer:
         # gray = cv2.equalizeHist(gray)
         # gray = cv2.resize(gray, (0, 0), fx=1 / 3, fy=1 / 3)
         # faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(30, 30))
-
-        faces = detector.detect_faces(img)
+        recognized_id = None
+        faces = detect_face(img, showImage=False)
         f = None
-        for _, face in enumerate(faces):
-            Draw_Rect(img, face['box'], [0, 0, 255])
-            x, y, w, h = face['box']
-
-            min_distance = 1000
-            min_id = -1
-            for tuple in self.ids_and_representations:
-                start=time.time()
-                embedding = img_to_encoding(org_image)
-                end = time.time()
-                logging.warning("embedding FUNC took {} seconds. ".format(end - start))
-                start = time.time()
-                dist = np.linalg.norm(embedding - tuple[1])
-                end = time.time()
-                logging.warning("norm FUNC took {} seconds. ".format(end - start))
-                start = time.time()
-                if dist < min_distance:
-                    min_distance = dist
-                    recognized_id = tuple[0]
-
-            if detectBlink:
-                # eye detection for blink detection
-                eyes = self._Both_Eye_Cascade.detectMultiScale(gray1, 1.3, 5, minSize=(10, 10))
-                # Examining the length of eyes object for eyes
-                if len(eyes) >= 2:
-                    # Check if program is running for detection
-                    eyeDetected = True
-                else:
-                    eyeDetected = False
-            # Check that the face is recognized
-            if min_distance > int(config.recognizer_options['confident_threshold']):
-                DispID(face['box'], "NOT AUTHENTICATED", img)
-                logging.info("Cannot found; conf= {0}".format(min_distance))
+        embedding = get_embedding(faces)
+        min_distance = 10000
+        min_id = -1
+        start_for_loop = time.time()
+        for tuple in self.ids_and_representations:
+            start = time.time()
+            end = time.time()
+            logging.debug("embedding FUNC took {} seconds. ".format(end - start))
+            start = time.time()
+            dist = np.linalg.norm(embedding - tuple[1])
+            end = time.time()
+            logging.debug("norm FUNC took {} seconds. ".format(end - start))
+            start = time.time()
+            if dist < min_distance:
+                min_distance = dist
+                recognized_id = tuple[0]
+        end_for_loop = time.time()
+        logging.info("For loop took {}".format((end_for_loop - start_for_loop)))
+        if detectBlink:
+            # eye detection for blink detection
+            eyes = self._Both_Eye_Cascade.detectMultiScale(gray1, 1.3, 5, minSize=(10, 10))
+            # Examining the length of eyes object for eyes
+            if len(eyes) >= 2:
+                # Check if program is running for detection
+                eyeDetected = True
             else:
-                if getUserById(recognized_id) is not None and str(recognized_id) == user_id:
-                    DispID(face['box'], getUserById(recognized_id).name, img)
-                    name = getUserById(recognized_id).name
-                    logging.info("{0} found with conf {1}".format(name, min_distance))
-                    f = face
-                    authorized = True
-                else:
-                    DispID(face['box'], getUserById(recognized_id).name, img)
-                    name = getUserById(recognized_id).name
-                    logging.info("{0} found with conf {1}".format(name, min_distance))
-                    authorized = False
+                eyeDetected = False
+        # Check that the face is recognized
+        if min_distance > int(config.recognizer_options['confident_threshold']):
+            # DispID(face['box'], "NOT AUTHENTICATED", img)
+            logging.info("Cannot found; conf= {0}".format(min_distance))
+        else:
+            if getUserById(recognized_id) is not None and str(recognized_id) == user_id:
+                # DispID(face['box'], getUserById(recognized_id).name, img)
+                name = getUserById(recognized_id).name
+                logging.info("{0} found with conf {1}".format(name, min_distance))
+                # f = face
+                authorized = True
+            else:
+                # DispID(face['box'], getUserById(recognized_id).name, img)
+                name = getUserById(recognized_id).name
+                logging.info("{0} found with conf {1}".format(name, min_distance))
+                authorized = False
         end = time.time()
-        logging.warning("PREDICTION FUNC took {} seconds. ".format(end - start))
-        return img, authorized, f, end - start, eyeDetected
+        logging.warning("PREDICTION FUNC took {} seconds. ".format(end - start_func))
+        return img, authorized, f, end - start_func, eyeDetected
 
     def readInputAndPredict(self, input_, user_id, blink_detection, is_camera):
         # frame_width = int(input_.get(3))
@@ -185,6 +184,7 @@ class Recognizer:
                     return False
 
                 ret, img = input_.read()
+                showImage(img)
                 predicted, authorized, face, time_taken, eyeReturnValue = self.predict(img, user_id, blink_detection)
                 # Blink detection
                 if isStart:
@@ -205,7 +205,7 @@ class Recognizer:
 
                 if count > int(config.recognizer_options['number_of_recognizing_threshold']):
                     if blinkDetected or not blink_detection:
-                        DispID['box'](face, 'AUTHENTICATED', img)
+                        # DispID(face, 'AUTHENTICATED', img)
                         time.sleep(2)
                         return True
                     else:
