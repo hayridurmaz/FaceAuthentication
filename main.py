@@ -1,9 +1,10 @@
+import logging
+import os
+
 import coloredlogs
 import cv2
 
 import config
-import os
-import logging
 from Recognizer import Recognizer
 from User import getAllUsers, addUser, User, getUserByUsername
 from Utilities import create_file_if_not_exist, create_folder_if_not_exist, get_embedding
@@ -60,9 +61,9 @@ def authenticate(model):
 def testCase(model):
     logging.info("Test started")
     # Comment unneeded lines!
-    # for i in range(10):
-    addUsers(model)
-    authenticate(model)
+    for i in range(10):
+        addUsers(model)
+        authenticate(model)
 
 
 def testCase_2(model):

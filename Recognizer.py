@@ -1,17 +1,15 @@
-import cv2
 import logging
-import os
-import time
+import logging
 import pickle
+import time
+
 import cv2
 import numpy as np
-from deepface import DeepFace
 
 import config
 from User import getUserById
-from Utilities import create_folder_if_not_exist, create_dataset_for_user, Draw_Rect, DispID, getImagesAndLabels, \
-    img_to_encoding, getImagesAndLabelsForUser, showImage, get_embedding, detect_face
-from mtcnn.mtcnn import MTCNN
+from Utilities import create_folder_if_not_exist, create_dataset_for_user, getImagesAndLabels, \
+    getImagesAndLabelsForUser, showImage, get_embedding, detect_face
 
 numberOfSamples = config.recognizer_options['number_of_samples']
 dataset_name = config.recognizer_options['dataset_name']
@@ -96,9 +94,6 @@ class Recognizer:
         # self.train()
 
     def predict(self, img, user_id, detectBlink):
-        # df = DeepFace.find(img_path=img, db_path=config.recognizer_options['user_database'])
-        # return img, df, None, 0, True
-
         start_func = time.time()
         authorized = False
         eyeDetected = False
@@ -108,21 +103,17 @@ class Recognizer:
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray1 = gray.copy()
-        org_image = img.copy()
-        # gray = cv2.equalizeHist(gray)
-        # gray = cv2.resize(gray, (0, 0), fx=1 / 3, fy=1 / 3)
-        # faces = self._Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(30, 30))
         recognized_id = None
         faces = detect_face(img, isShowImage=False)
         f = None
+        start = time.time()
         embedding = get_embedding(faces)
+        end = time.time()
+        logging.debug("embedding FUNC took {} seconds. ".format(end - start))
         min_distance = 10000
         min_id = -1
         start_for_loop = time.time()
         for tuple in self.ids_and_representations:
-            start = time.time()
-            end = time.time()
-            logging.debug("embedding FUNC took {} seconds. ".format(end - start))
             start = time.time()
             dist = np.linalg.norm(embedding - tuple[1])
             end = time.time()

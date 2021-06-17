@@ -1,16 +1,11 @@
 import logging
 import os
+import time
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import time
-from keras.models import load_model
 from deepface import DeepFace
-from deepface.basemodels import VGGFace
-from deepface.commons import functions
-from deepface.detectors import FaceDetector
-from mtcnn import MTCNN
 from keras_vggface.vggface import VGGFace
 
 import config
@@ -18,22 +13,8 @@ import config
 dataset_path = config.recognizer_options['user_dataset']
 database_path = config.recognizer_options['user_database']
 
-detector = MTCNN()
 resnet50_features = VGGFace(model='resnet50', include_top=False, input_shape=(224, 224, 3),
                             pooling='avg')  # pooling: None, avg or max
-
-
-# model = load_model('models/facenet_keras_weights.h5')
-
-
-# models = Facenet.loadModel()
-# models = OpenFace.loadModel()
-# models = FbDeepFace.loadModel()
-
-
-def img_to_encoding(image_path):
-    showImage(image_path)
-    return DeepFace.represent(image_path, model_name='Facenet')
 
 
 def resize(img):
@@ -64,10 +45,6 @@ def FileRead(file_path="users_name.txt"):
         for line in f:
             NAME.append(line.split(",")[1].rstrip())
     return NAME
-
-
-# def log(log_level, log_str):
-#     print("[{}] : {} ".format(log_level, log_str))
 
 
 def Draw_Rect(Image, face, color):
@@ -109,27 +86,6 @@ def getImagesAndLabelsForUser(user):
     return faceSamples
 
 
-def DispID(face, NAME, Image):
-    x, y, w, h = face
-    pt1 = (int(x + w / 2.0 - 50), int(y + h + 40))
-    pt2 = (int(x + w / 2.0 + 50), int(y + h + 65))
-    pt3 = (int(x + w / 2.0 - 46), int(y + h + (-int(y + h) + int(y + h + 25)) / 2 + 48))
-    triangle_cnt = np.array([(int(x + w / 2.0), int(y + h + 10)),
-                             (int(x + w / 2.0 - 20), int(y + h + 35)),
-                             (int(x + w / 2.0 + 20), int(y + h + 35))])
-    cv2.drawContours(Image, [triangle_cnt], 0, (255, 255, 255), -1)
-    cv2.rectangle(Image, pt1, pt2, (255, 255, 255), -1)
-    cv2.rectangle(Image, pt1, pt2, (0, 0, 255), 1)
-    cv2.putText(Image, NAME, pt3, cv2.FONT_HERSHEY_PLAIN, 1.1, (0, 0, 255))
-
-
-# def Get_UserName(ID, conf):
-#     print("[INFO] Confidence: " + "{:.2f} ".format(conf))
-#     if not ID > 0:
-#         return " Unknown "
-#     return "sa"
-
-
 def showImage(image, title='Video'):
     cv2.imshow(title, image)
     cv2.waitKey(delay=1)
@@ -154,17 +110,9 @@ def create_dataset_for_user(cam, user, numberOfsamples, recognizer):
     while True:
         # Capture, decode and return the next frame of the video
         ret, image = cam.read()
-        # Convert to gray-scale image
         if image is None:
             break
-        # base_image = image.copy()
         start_reading_image = time.time()
-        # showImage(image)
-        # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # Search for faces in the gray-scale image
-        # faces is an array of coordinates of the rectangles where faces exists
-        # faces = recognizer.Face_Cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=8, minSize=(30, 30))
-        # MTCNN TOOK SOO MUCH!!!
         try:
             faces = detect_face(image, isShowImage=True)
             logging.info("Face detector took {} sec".format(time.time() - start_reading_image))
